@@ -20,6 +20,7 @@ import {
 import { LoginButton } from './components/providers';
 import { OAuthLogin } from './components/oauth-login';
 import { IdentityWalletLinker } from './components/identity-wallet-linker';
+import MintCarvIdDialog from "@/components/MintCarvIdDialog";
 
 export default function MustaFairBlackLanding() {
   return (
@@ -295,6 +296,9 @@ export default function MustaFairBlackLanding() {
                   </CardContent>
                 </Card>
               </motion.div>
+
+              {/* Mint CARV ID Popup */}
+              <MintCarvIdDialog />
             </div>
           </motion.div>
 
