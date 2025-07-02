@@ -11,6 +11,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || 'YOUR_PRIVY_APP_ID'}
       config={{
+        loginMethods: [
+          'wallet',
+          'google',
+          'discord',
+          'github',
+          'twitter',
+          // Add more providers as needed: 'apple', 'linkedin', 'spotify', 'tiktok', 'instagram', 'line'
+        ],
         embeddedWallets: {
           ethereum: {
             createOnLogin: 'users-without-wallets',
@@ -49,11 +57,7 @@ export function LoginButton({ navStyle = false }: { navStyle?: boolean }) {
   if (navStyle) {
     return (
       <Button
-        onClick={() => login({
-          loginMethods: ['wallet'],
-          walletChainType: 'ethereum-and-solana',
-          disableSignup: false,
-        })}
+        onClick={() => login()}
         disabled={disableLogin}
         className="bg-black text-white font-mono px-4 py-2 border-2 border-white shadow-[3px_3px_0px_0px_#666] hover:shadow-[5px_5px_0px_0px_#666] transition-all duration-300 rounded-none text-xs tracking-widest"
         style={{ minWidth: 160 }}
