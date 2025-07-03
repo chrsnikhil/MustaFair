@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useEffect, useState } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
@@ -26,6 +27,10 @@ export function CarvIdPassportDialog() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [open, setOpen] = useState(false);
+  const [web2Profile, setWeb2Profile] = useState<any>(null);
+  const [web2Loading, setWeb2Loading] = useState(false);
+  const [web2Error, setWeb2Error] = useState<string | null>(null);
+  const [trustScore, setTrustScore] = useState<{ value: number; badge: string; explanation: string } | null>(null);
 
   const isOnCorrectNetwork = chain?.id === bscTestnet.id;
 
@@ -54,7 +59,7 @@ export function CarvIdPassportDialog() {
   useEffect(() => {
     const anyError = tokenIdError || tokenURIError;
     if (anyError) {
-      setError(anyError.message);
+      setError(String(anyError.message));
       setIsLoading(false);
       return;
     }
@@ -75,6 +80,50 @@ export function CarvIdPassportDialog() {
     }
     setIsLoading(isFetchingTokenId || isFetchingTokenURI);
   }, [tokenURI, tokenIdError, tokenURIError, isFetchingTokenId, isFetchingTokenURI]);
+
+  // Fetch Web2 profile from CARV API when modal opens and address is available
+  useEffect(() => {
+    if (address && open) {
+      setWeb2Loading(true);
+      setWeb2Error(null);
+      fetch(`https://api.carv.io/v1/users/address/${address}`, {
+        headers: { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CARV_DATA_API_KEY}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          setWeb2Profile(data && data.data ? data.data : null);
+          setWeb2Loading(false);
+        })
+        .catch(() => {
+          setWeb2Error('Failed to fetch Web2 profile');
+          setWeb2Loading(false);
+        });
+    }
+  }, [address, open]);
+
+  // Compute a demo trust score based on linked accounts
+  useEffect(() => {
+    if (web2Profile && metadata) {
+      let score = 50;
+      let badge = "New User";
+      let explanation = "Base score for CARV ID holder.";
+      if (web2Profile.twitter && web2Profile.twitter.verified) {
+        score += 30;
+        explanation += " Verified Twitter linked.";
+      }
+      if (web2Profile.discord) {
+        score += 20;
+        explanation += " Discord linked.";
+      }
+      if (metadata.attributes?.find(a => a.trait_type === "NFTs")) {
+        score += 10;
+        explanation += " NFT activity detected.";
+      }
+      if (score > 90) badge = "Trusted";
+      else if (score > 70) badge = "Active";
+      setTrustScore({ value: score, badge, explanation });
+    }
+  }, [web2Profile, metadata]);
 
   // Button is only enabled if user is connected and has a CARV ID
   const canView = isConnected && isOnCorrectNetwork && hasToken;
@@ -117,7 +166,7 @@ export function CarvIdPassportDialog() {
             <Alert variant="destructive" className="w-full shadow-[6px_6px_0px_0px_#666] border-2 border-black">
               <Terminal className="h-4 w-4" />
               <AlertTitle>Error Loading CARV ID</AlertTitle>
-              <AlertDescription>{`${error}`}</AlertDescription>
+              <AlertDescription>{String(error)}</AlertDescription>
             </Alert>
           ) : metadata ? (
             <div className="w-full flex flex-col items-center gap-4">
@@ -139,20 +188,41 @@ export function CarvIdPassportDialog() {
                   {metadata.description}
                 </p>
               </div>
+              {/* Web2 Profile Section */}
+              {web2Loading ? (
+                <Skeleton className="h-6 w-40" />
+              ) : web2Profile && typeof web2Profile === 'object' ? (
+                <div className="w-full text-center flex flex-col items-center gap-1">
+                  <h3 className="text-xs font-mono text-[#d1d5db] tracking-widest mb-1">Web2 Profile</h3>
+                  {web2Profile.twitter && typeof web2Profile.twitter === 'object' && (
+                    <div className="flex items-center gap-2">
+                      {typeof web2Profile.twitter.avatar_url === 'string' && (
+                        <img src={web2Profile.twitter.avatar_url} alt="Twitter" className="w-5 h-5 rounded-full" />
+                      )}
+                      <span className="text-xs font-mono text-white">@{typeof web2Profile.twitter.username === 'string' ? web2Profile.twitter.username : ''}</span>
+                      {web2Profile.twitter.verified && <span className="text-green-400 ml-1">✔</span>}
+                    </div>
+                  )}
+                  {web2Profile.discord && typeof web2Profile.discord === 'object' && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono text-white">{typeof web2Profile.discord.username === 'string' ? web2Profile.discord.username : ''}</span>
+                    </div>
+                  )}
+                  {/* Add more socials as needed */}
+                </div>
+              ) : (
+                <div className="text-xs text-[#999]">No Web2 profile linked.</div>
+              )}
               {/* Divider */}
               <div className="w-full border-t-2 border-[#333] my-1" />
-              {/* Attributes Section */}
-              <div className="w-full flex flex-wrap justify-center gap-2">
-                {metadata.attributes && metadata.attributes.map((attr, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-black text-white border-2 border-white rounded px-3 py-1 font-mono text-xs font-bold tracking-wider shadow-[2px_2px_0px_0px_#666] flex flex-col items-center min-w-[80px]"
-                  >
-                    <span className="uppercase text-[#d1d5db] text-[10px] tracking-widest mb-0.5">{attr.trait_type}</span>
-                    <span className="text-white text-xs font-mono">{attr.value}</span>
-                  </div>
-                ))}
-              </div>
+              {/* Trust Score Section */}
+              {trustScore && (
+                <div className="w-full text-center flex flex-col items-center gap-1">
+                  <h3 className="text-xs font-mono text-[#d1d5db] tracking-widest mb-1">Trust Score</h3>
+                  <span className="text-lg font-black text-white">{trustScore.value}/100 <span className="ml-2 text-xs bg-[#222] border border-white rounded px-2">{trustScore.badge}</span></span>
+                  <span className="text-xs text-[#999]">{trustScore.explanation}</span>
+                </div>
+              )}
               {/* Divider */}
               <div className="w-full border-t-2 border-[#333] my-1" />
               {/* Footer Section */}
@@ -172,7 +242,7 @@ export function CarvIdPassportDialog() {
                 )}
               </div>
             </div>
-          ) : null}
+          ) : (<></>)}
         </div>
       </DialogContent>
     </Dialog>
