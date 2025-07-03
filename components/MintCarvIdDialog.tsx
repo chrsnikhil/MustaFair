@@ -9,7 +9,7 @@ import { useSession } from "next-auth/react";
 import ModularCarvID_ABI_JSON from "@/lib/ModularCarvID_ABI.json";
 const ModularCarvID_ABI = ModularCarvID_ABI_JSON.abi;
 
-const CONTRACT_ADDRESS = "0x2FCF47444C97EE9c917d7351Cb0F7bC349CFBCaF";
+const CONTRACT_ADDRESS = "0x32A1BDa556796E7E62D37cffdAdFe4F06423fC6c";
 const BNB_TESTNET_CHAIN_ID = 97;
 
 export default function MintCarvIdDialog() {

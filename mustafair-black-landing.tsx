@@ -21,6 +21,7 @@ import { LoginButton } from './components/providers';
 import { OAuthLogin } from './components/oauth-login';
 import { IdentityWalletLinker } from './components/identity-wallet-linker';
 import MintCarvIdDialog from "@/components/MintCarvIdDialog";
+import { CarvIdPassportDialog } from "@/components/carv-id-viewer";
 
 export default function MustaFairBlackLanding() {
   return (
@@ -57,6 +58,7 @@ export default function MustaFairBlackLanding() {
           <div className="flex gap-4 items-center">
             <OAuthLogin navStyle />
             <LoginButton navStyle />
+            <CarvIdPassportDialog />
             <motion.div
               className="w-4 h-4 bg-white border-2 border-white shadow-[2px_2px_0px_0px_#666]"
               animate={{
@@ -74,7 +76,7 @@ export default function MustaFairBlackLanding() {
       </motion.nav>
 
       {/* Hero Section */}
-      <div className="relative z-10 px-6 py-12">
+      <div className="relative z-10 px-6 py-12 md:py-24">
         <div className="max-w-7xl mx-auto">
           {/* Main Terminal Hero */}
           <motion.div
@@ -296,133 +298,37 @@ export default function MustaFairBlackLanding() {
                   </CardContent>
                 </Card>
               </motion.div>
-
-              {/* Mint CARV ID Popup */}
-              <MintCarvIdDialog />
             </div>
           </motion.div>
 
-          {/* Identity & Wallet Linking Section */}
+          {/* Identity Core */}
           <motion.div
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 1.6, duration: 1 }}
-            className="mb-16"
+            className="my-16 md:my-24"
           >
             <div className="text-center mb-8">
-              <h2 className="text-4xl font-black font-mono text-white tracking-[0.1em] transform -skew-x-1 mb-4">
-                IDENTITY PROTOCOL
+              <h2
+                className="text-3xl lg:text-4xl font-black tracking-[0.1em] text-white uppercase"
+                style={{ textShadow: '2px 2px 0px #666' }}
+              >
+                Identity Core
               </h2>
-              <p className="text-[#d1d5db] font-mono tracking-wide max-w-2xl mx-auto">
-                Link your Web2 identity to Web3 wallets via ERC-7231 standard
-                for decentralized reputation
+              <p className="text-[#d1d5db] mt-2 max-w-2xl mx-auto">
+                Link your digital identities into a unified modular system.
               </p>
             </div>
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              <motion.div
-                whileHover={{ scale: 1.02, y: -4 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card className="bg-black border-4 border-white shadow-[12px_12px_0px_0px_#666] hover:shadow-[16px_16px_0px_0px_#666] transition-all duration-400">
-                  <CardContent className="p-6">
-                    <h3 className="text-2xl font-black font-mono text-white tracking-wider mb-4 transform -skew-x-1">
-                      WEB2 IDENTITY
-                    </h3>
-                    <OAuthLogin showIdentityHash />
-                  </CardContent>
-                </Card>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.02, y: -4 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card className="bg-black border-4 border-white shadow-[12px_12px_0px_0px_#666] hover:shadow-[16px_16px_0px_0px_#666] transition-all duration-400">
-                  <CardContent className="p-6">
-                    <h3 className="text-2xl font-black font-mono text-white tracking-wider mb-4 transform skew-x-1">
-                      WEB3 WALLET
-                    </h3>
-                    <div className="space-y-4">
-                      <LoginButton />
-                      <div className="bg-[#333] border-2 border-white p-4 font-mono text-sm">
-                        <div className="text-white mb-2 font-black tracking-wider">
-                          ERC-7231 READY
-                        </div>
-                        <div className="text-[#d1d5db] text-xs">
-                          Smart contract identity binding protocol for
-                          cross-platform reputation verification
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+            <div className="max-w-xl mx-auto space-y-6">
+              <IdentityWalletLinker />
+              <MintCarvIdDialog />
             </div>
           </motion.div>
+        </div>
 
-          {/* Identity Wallet Binding */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 1.8, duration: 1 }}
-            className="mb-16 max-w-2xl mx-auto"
-          >
-            <IdentityWalletLinker />
-          </motion.div>
-
-          {/* Action Controls */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 1.8, duration: 1 }}
-            className="flex flex-wrap gap-6 justify-center mb-16"
-          >
-            <motion.div
-              whileHover={{
-                scale: 1.05,
-                y: -8,
-                rotate: -1,
-                transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button
-                className="bg-white hover:bg-[#e8e8e8] text-black font-black font-mono px-12 py-6 border-4 border-white 
-                           shadow-[12px_12px_0px_0px_#666] hover:shadow-[16px_16px_0px_0px_#666] 
-                           transition-all duration-400 ease-out tracking-wider text-xl transform -skew-x-1"
-              >
-                <Terminal className="mr-3 h-6 w-6" />
-                npm run start
-              </Button>
-            </motion.div>
-
-            <motion.div
-              whileHover={{
-                scale: 1.05,
-                y: -8,
-                rotate: 1,
-                transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button
-                variant="outline"
-                className="bg-black border-4 border-white text-white hover:bg-[#1a1a1a] font-black font-mono px-12 py-6 
-                           shadow-[12px_12px_0px_0px_#666] hover:shadow-[16px_16px_0px_0px_#666] 
-                           transition-all duration-400 ease-out tracking-wider text-xl transform skew-x-1"
-              >
-                <HardDrive className="mr-3 h-6 w-6" />
-                npm run docs
-              </Button>
-            </motion.div>
-          </motion.div>
-
-          {/* Industrial Grid Layout */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2, duration: 1 }}
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
-          >
+        {/* Feature Grid */}
+        <div className="mt-24">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
                 icon: Cpu,
@@ -504,68 +410,68 @@ export default function MustaFairBlackLanding() {
                 </Card>
               </motion.div>
             ))}
-          </motion.div>
-
-          {/* Command Line Interface */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.8, duration: 1 }}
-            whileHover={{
-              y: -6,
-              transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
-            }}
-            className="max-w-4xl mx-auto"
-          >
-            <Card className="bg-black border-4 border-white shadow-[16px_16px_0px_0px_#666] hover:shadow-[20px_20px_0px_0px_#666] transition-all duration-500 ease-out">
-              <CardContent className="p-8">
-                <div className="flex items-center gap-4 mb-6">
-                  <motion.div
-                    animate={{ rotate: [0, 5, -5, 0] }}
-                    transition={{
-                      duration: 4,
-                      repeat: Number.POSITIVE_INFINITY,
-                    }}
-                  >
-                    <Wrench className="w-6 h-6 text-white" />
-                  </motion.div>
-                  <h2 className="text-white font-mono font-black text-2xl tracking-wider">
-                    DEPLOY MUSTAFAIR SYSTEM
-                  </h2>
-                </div>
-
-                <div className="flex gap-4">
-                  <Input
-                    placeholder="npm run deploy --production"
-                    className="bg-black border-3 border-white text-white placeholder:text-[#666] font-mono 
-                               shadow-[4px_4px_0px_0px_#666] focus:shadow-[6px_6px_0px_0px_#666] 
-                               hover:shadow-[5px_5px_0px_0px_#666] transition-all duration-300 ease-out
-                               focus:border-[#d1d5db] focus:outline-none focus:ring-0 flex-1"
-                  />
-                  <motion.div
-                    whileHover={{ scale: 1.05, rotate: 5 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      className="bg-black hover:bg-[#1a1a1a] text-white font-mono font-bold px-6 border-3 border-white 
-                                 shadow-[4px_4px_0px_0px_#666] hover:shadow-[6px_6px_0px_0px_#666] 
-                                 transition-all duration-300 ease-out"
-                    >
-                      <ArrowRight className="w-5 h-5" />
-                    </Button>
-                  </motion.div>
-                </div>
-
-                <div className="mt-6 font-mono text-sm text-[#d1d5db] space-y-1">
-                  <div>$ npm install @mustafair/black-industrial</div>
-                  <div>$ npm run build --mode=production</div>
-                  <div>$ npm test --coverage --black</div>
-                  <div>$ npm run deploy --env=production</div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+          </div>
         </div>
+
+        {/* Command Line Interface */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 2.8, duration: 1 }}
+          whileHover={{
+            y: -6,
+            transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
+          }}
+          className="mt-24 max-w-4xl mx-auto"
+        >
+          <Card className="bg-black border-4 border-white shadow-[16px_16px_0px_0px_#666] hover:shadow-[20px_20px_0px_0px_#666] transition-all duration-500 ease-out">
+            <CardContent className="p-8">
+              <div className="flex items-center gap-4 mb-6">
+                <motion.div
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{
+                    duration: 4,
+                    repeat: Number.POSITIVE_INFINITY,
+                  }}
+                >
+                  <Wrench className="w-6 h-6 text-white" />
+                </motion.div>
+                <h2 className="text-white font-mono font-black text-2xl tracking-wider">
+                  DEPLOY MUSTAFAIR SYSTEM
+                </h2>
+              </div>
+
+              <div className="flex gap-4">
+                <Input
+                  placeholder="npm run deploy --production"
+                  className="bg-black border-3 border-white text-white placeholder:text-[#666] font-mono 
+                             shadow-[4px_4px_0px_0px_#666] focus:shadow-[6px_6px_0px_0px_#666] 
+                             hover:shadow-[5px_5px_0px_0px_#666] transition-all duration-300 ease-out
+                             focus:border-[#d1d5db] focus:outline-none focus:ring-0 flex-1"
+                />
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    className="bg-black hover:bg-[#1a1a1a] text-white font-mono font-bold px-6 border-3 border-white 
+                               shadow-[4px_4px_0px_0px_#666] hover:shadow-[6px_6px_0px_0px_#666] 
+                               transition-all duration-300 ease-out"
+                  >
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </motion.div>
+              </div>
+
+              <div className="mt-6 font-mono text-sm text-[#d1d5db] space-y-1">
+                <div>$ npm install @mustafair/black-industrial</div>
+                <div>$ npm run build --mode=production</div>
+                <div>$ npm test --coverage --black</div>
+                <div>$ npm run deploy --env=production</div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
