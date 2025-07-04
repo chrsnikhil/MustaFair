@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { LoginButton } from './components/providers';
 import { OAuthLogin } from './components/oauth-login';
-import { IdentityWalletLinker } from './components/identity-wallet-linker';
+import { IdentityGraph } from './components/identity-graph';
 import MintCarvIdDialog from "@/components/MintCarvIdDialog";
 import { CarvIdPassportDialog } from "@/components/carv-id-viewer";
 
@@ -313,15 +313,17 @@ export default function MustaFairBlackLanding() {
                 className="text-3xl lg:text-4xl font-black tracking-[0.1em] text-white uppercase"
                 style={{ textShadow: '2px 2px 0px #666' }}
               >
-                Identity Core
+                Identity Graph Matrix
               </h2>
-              <p className="text-[#d1d5db] mt-2 max-w-2xl mx-auto">
-                Link your digital identities into a unified modular system.
+              <p className="text-[#d1d5db] mt-2 max-w-2xl mx-auto font-mono tracking-wide">
+                VISUALIZE YOUR MODULAR DIGITAL IDENTITY • ERC-7231 COMPLIANT INFRASTRUCTURE
               </p>
             </div>
-            <div className="max-w-xl mx-auto space-y-6">
-              <IdentityWalletLinker />
-              <MintCarvIdDialog />
+            <div className="max-w-5xl mx-auto space-y-6">
+              <IdentityGraph />
+              <div className="flex justify-center">
+                <MintCarvIdDialog />
+              </div>
             </div>
           </motion.div>
         </div>
