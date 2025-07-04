@@ -1,12 +1,27 @@
-"use client"
+'use client';
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { motion } from "framer-motion"
-import { Terminal, Wrench, HardDrive, Cpu, Settings, Monitor, Server, ArrowRight, Power, Zap } from "lucide-react"
-import { LoginButton } from "./components/providers"
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
+import {
+  Terminal,
+  Wrench,
+  HardDrive,
+  Cpu,
+  Settings,
+  Monitor,
+  Server,
+  ArrowRight,
+  Power,
+  Zap,
+} from 'lucide-react';
+import { LoginButton } from './components/providers';
+import { OAuthLogin } from './components/oauth-login';
+import { IdentityWalletLinker } from './components/identity-wallet-linker';
+import MintCarvIdDialog from "@/components/MintCarvIdDialog";
+import { CarvIdPassportDialog } from "@/components/carv-id-viewer";
 
 export default function MustaFairBlackLanding() {
   return (
@@ -33,7 +48,7 @@ export default function MustaFairBlackLanding() {
             whileHover={{
               scale: 1.05,
               rotate: 1,
-              shadow: "8px_8px_0px_0px_#666",
+              boxShadow: '8px_8px_0px_0px_#666',
               transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
             }}
             whileTap={{ scale: 0.95 }}
@@ -41,7 +56,9 @@ export default function MustaFairBlackLanding() {
             MUSTAFAIR.SYS
           </motion.div>
           <div className="flex gap-4 items-center">
+            <OAuthLogin navStyle />
             <LoginButton navStyle />
+            <CarvIdPassportDialog />
             <motion.div
               className="w-4 h-4 bg-white border-2 border-white shadow-[2px_2px_0px_0px_#666]"
               animate={{
@@ -59,13 +76,17 @@ export default function MustaFairBlackLanding() {
       </motion.nav>
 
       {/* Hero Section */}
-      <div className="relative z-10 px-6 py-12">
+      <div className="relative z-10 px-6 py-12 md:py-24">
         <div className="max-w-7xl mx-auto">
           {/* Main Terminal Hero */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.5, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={{
+              duration: 1.5,
+              delay: 0.2,
+              ease: [0.25, 0.46, 0.45, 0.94],
+            }}
             className="grid lg:grid-cols-3 gap-8 mb-16"
           >
             {/* Left Terminal */}
@@ -97,13 +118,21 @@ export default function MustaFairBlackLanding() {
                           transition={{ duration: 0.3, delay: 0.2 }}
                         />
                       </div>
-                      <span className="text-white font-mono text-sm">TERMINAL_001.exe</span>
+                      <span className="text-white font-mono text-sm">
+                        TERMINAL_001.exe
+                      </span>
                     </div>
 
                     <div className="space-y-4 font-mono text-white">
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-bold">root@mustafair:~$</span>
-                        <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+                        <span className="text-white font-bold">
+                          root@mustafair:~$
+                        </span>
+                        <motion.span
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                        >
                           npm run initialize-system
                         </motion.span>
                       </div>
@@ -114,9 +143,13 @@ export default function MustaFairBlackLanding() {
                         transition={{ delay: 1 }}
                         className="space-y-2 text-sm"
                       >
-                        <div>[INFO] npm install @mustafair/industrial-framework</div>
+                        <div>
+                          [INFO] npm install @mustafair/industrial-framework
+                        </div>
                         <div>[INFO] npm run build:black-components</div>
-                        <div>[SUCCESS] MustaFair black industrial system ready</div>
+                        <div>
+                          [SUCCESS] MustaFair black industrial system ready
+                        </div>
                       </motion.div>
 
                       <motion.div
@@ -127,14 +160,19 @@ export default function MustaFairBlackLanding() {
                       >
                         <h1
                           className="text-4xl lg:text-6xl font-black tracking-[0.1em] transform -skew-x-1 mb-4 text-white"
-                          style={{ textShadow: "3px 3px 0px #666, 6px 6px 0px #999" }}
+                          style={{
+                            textShadow: '3px 3px 0px #666, 6px 6px 0px #999',
+                          }}
                         >
                           MUSTAFAIR
                           <br />
-                          <span className="text-[#d1d5db]">BLACK INDUSTRIAL</span>
+                          <span className="text-[#d1d5db]">
+                            BLACK INDUSTRIAL
+                          </span>
                         </h1>
                         <p className="text-[#d1d5db] text-lg tracking-wide max-w-lg">
-                          PURE BLACK INTERFACE COMPONENTS FOR ABSOLUTE DIGITAL OPERATIONS.
+                          PURE BLACK INTERFACE COMPONENTS FOR ABSOLUTE DIGITAL
+                          OPERATIONS.
                         </p>
                       </motion.div>
                     </div>
@@ -163,14 +201,21 @@ export default function MustaFairBlackLanding() {
                         whileHover={{
                           rotate: 360,
                           scale: 1.1,
-                          transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+                          transition: {
+                            duration: 0.6,
+                            ease: [0.25, 0.46, 0.45, 0.94],
+                          },
                         }}
                       >
                         <Power className="w-6 h-6 text-white" />
                       </motion.div>
                       <div>
-                        <h3 className="font-mono font-black text-lg text-white">SYSTEM STATUS</h3>
-                        <p className="font-mono text-sm text-[#d1d5db]">ALL SYSTEMS OPERATIONAL</p>
+                        <h3 className="font-mono font-black text-lg text-white">
+                          SYSTEM STATUS
+                        </h3>
+                        <p className="font-mono text-sm text-[#d1d5db]">
+                          ALL SYSTEMS OPERATIONAL
+                        </p>
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -181,8 +226,12 @@ export default function MustaFairBlackLanding() {
                       <div className="w-full h-3 bg-black border-2 border-white">
                         <motion.div
                           initial={{ width: 0 }}
-                          animate={{ width: "23%" }}
-                          transition={{ delay: 1.2, duration: 1.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                          animate={{ width: '23%' }}
+                          transition={{
+                            delay: 1.2,
+                            duration: 1.5,
+                            ease: [0.25, 0.46, 0.45, 0.94],
+                          }}
                           className="h-full bg-white"
                         />
                       </div>
@@ -219,18 +268,30 @@ export default function MustaFairBlackLanding() {
                         <Zap className="w-6 h-6 text-white" />
                       </motion.div>
                       <div>
-                        <h3 className="font-mono font-black text-lg text-white">POWER CORE</h3>
-                        <p className="font-mono text-sm text-[#d1d5db]">ENERGY: 97.3%</p>
+                        <h3 className="font-mono font-black text-lg text-white">
+                          POWER CORE
+                        </h3>
+                        <p className="font-mono text-sm text-[#d1d5db]">
+                          ENERGY: 97.3%
+                        </p>
                       </div>
                     </div>
                     <motion.div
                       animate={{ scale: [1, 1.02, 1] }}
-                      transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: [0.25, 0.46, 0.45, 0.94] }}
+                      transition={{
+                        duration: 2,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: [0.25, 0.46, 0.45, 0.94],
+                      }}
                       className="w-full h-8 bg-black border-2 border-white relative overflow-hidden"
                     >
                       <motion.div
-                        animate={{ x: ["-100%", "100%"] }}
-                        transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                        animate={{ x: ['-100%', '100%'] }}
+                        transition={{
+                          duration: 2,
+                          repeat: Number.POSITIVE_INFINITY,
+                          ease: 'linear',
+                        }}
                         className="absolute inset-0 bg-white opacity-30"
                       />
                     </motion.div>
@@ -240,71 +301,69 @@ export default function MustaFairBlackLanding() {
             </div>
           </motion.div>
 
-          {/* Action Controls */}
+          {/* Identity Core */}
           <motion.div
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 1.8, duration: 1 }}
-            className="flex flex-wrap gap-6 justify-center mb-16"
+            transition={{ delay: 1.6, duration: 1 }}
+            className="my-16 md:my-24"
           >
-            <motion.div
-              whileHover={{
-                scale: 1.05,
-                y: -8,
-                rotate: -1,
-                transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button
-                className="bg-white hover:bg-[#e8e8e8] text-black font-black font-mono px-12 py-6 border-4 border-white 
-                           shadow-[12px_12px_0px_0px_#666] hover:shadow-[16px_16px_0px_0px_#666] 
-                           transition-all duration-400 ease-out tracking-wider text-xl transform -skew-x-1"
+            <div className="text-center mb-8">
+              <h2
+                className="text-3xl lg:text-4xl font-black tracking-[0.1em] text-white uppercase"
+                style={{ textShadow: '2px 2px 0px #666' }}
               >
-                <Terminal className="mr-3 h-6 w-6" />
-                npm run start
-              </Button>
-            </motion.div>
-
-            <motion.div
-              whileHover={{
-                scale: 1.05,
-                y: -8,
-                rotate: 1,
-                transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button
-                variant="outline"
-                className="bg-black border-4 border-white text-white hover:bg-[#1a1a1a] font-black font-mono px-12 py-6 
-                           shadow-[12px_12px_0px_0px_#666] hover:shadow-[16px_16px_0px_0px_#666] 
-                           transition-all duration-400 ease-out tracking-wider text-xl transform skew-x-1"
-              >
-                <HardDrive className="mr-3 h-6 w-6" />
-                npm run docs
-              </Button>
-            </motion.div>
+                Identity Core
+              </h2>
+              <p className="text-[#d1d5db] mt-2 max-w-2xl mx-auto">
+                Link your digital identities into a unified modular system.
+              </p>
+            </div>
+            <div className="max-w-xl mx-auto space-y-6">
+              <IdentityWalletLinker />
+              <MintCarvIdDialog />
+            </div>
           </motion.div>
+        </div>
 
-          {/* Industrial Grid Layout */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2, duration: 1 }}
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
-          >
+        {/* Feature Grid */}
+        <div className="mt-24">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { icon: Cpu, title: "PROCESSING", value: "847.2 GHz", status: "OPTIMAL" },
-              { icon: Server, title: "STORAGE", value: "2.4 TB", status: "AVAILABLE" },
-              { icon: Monitor, title: "DISPLAY", value: "4K HDR", status: "ACTIVE" },
-              { icon: Settings, title: "CONFIG", value: "v2.1.3", status: "UPDATED" },
+              {
+                icon: Cpu,
+                title: 'PROCESSING',
+                value: '847.2 GHz',
+                status: 'OPTIMAL',
+              },
+              {
+                icon: Server,
+                title: 'STORAGE',
+                value: '2.4 TB',
+                status: 'AVAILABLE',
+              },
+              {
+                icon: Monitor,
+                title: 'DISPLAY',
+                value: '4K HDR',
+                status: 'ACTIVE',
+              },
+              {
+                icon: Settings,
+                title: 'CONFIG',
+                value: 'v2.1.3',
+                status: 'UPDATED',
+              },
             ].map((item, index) => (
               <motion.div
                 key={item.title}
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 2.2 + index * 0.15, duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+                transition={{
+                  delay: 2.2 + index * 0.15,
+                  duration: 0.8,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
                 whileHover={{
                   y: -12,
                   rotate: index % 2 === 0 ? 1 : -1,
@@ -325,14 +384,24 @@ export default function MustaFairBlackLanding() {
                       whileHover={{
                         rotate: 360,
                         scale: 1.1,
-                        transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+                        transition: {
+                          duration: 0.6,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
                       }}
                     >
                       <item.icon className="w-8 h-8 text-white" />
                     </motion.div>
-                    <h3 className="font-mono font-black text-lg mb-2 text-white">{item.title}</h3>
-                    <p className="font-mono text-2xl font-bold mb-1 text-white">{item.value}</p>
-                    <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+                    <h3 className="font-mono font-black text-lg mb-2 text-white">
+                      {item.title}
+                    </h3>
+                    <p className="font-mono text-2xl font-bold mb-1 text-white">
+                      {item.value}
+                    </p>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ duration: 0.2 }}
+                    >
                       <Badge className="bg-white text-black font-mono text-xs px-2 py-1 border border-white shadow-[2px_2px_0px_0px_#666]">
                         {item.status}
                       </Badge>
@@ -341,61 +410,69 @@ export default function MustaFairBlackLanding() {
                 </Card>
               </motion.div>
             ))}
-          </motion.div>
-
-          {/* Command Line Interface */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.8, duration: 1 }}
-            whileHover={{
-              y: -6,
-              transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
-            }}
-            className="max-w-4xl mx-auto"
-          >
-            <Card className="bg-black border-4 border-white shadow-[16px_16px_0px_0px_#666] hover:shadow-[20px_20px_0px_0px_#666] transition-all duration-500 ease-out">
-              <CardContent className="p-8">
-                <div className="flex items-center gap-4 mb-6">
-                  <motion.div
-                    animate={{ rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
-                  >
-                    <Wrench className="w-6 h-6 text-white" />
-                  </motion.div>
-                  <h2 className="text-white font-mono font-black text-2xl tracking-wider">DEPLOY MUSTAFAIR SYSTEM</h2>
-                </div>
-
-                <div className="flex gap-4">
-                  <Input
-                    placeholder="npm run deploy --production"
-                    className="bg-black border-3 border-white text-white placeholder:text-[#666] font-mono 
-                               shadow-[4px_4px_0px_0px_#666] focus:shadow-[6px_6px_0px_0px_#666] 
-                               hover:shadow-[5px_5px_0px_0px_#666] transition-all duration-300 ease-out
-                               focus:border-[#d1d5db] focus:outline-none focus:ring-0 flex-1"
-                  />
-                  <motion.div whileHover={{ scale: 1.05, rotate: 5 }} whileTap={{ scale: 0.95 }}>
-                    <Button
-                      className="bg-black hover:bg-[#1a1a1a] text-white font-mono font-bold px-6 border-3 border-white 
-                                 shadow-[4px_4px_0px_0px_#666] hover:shadow-[6px_6px_0px_0px_#666] 
-                                 transition-all duration-300 ease-out"
-                    >
-                      <ArrowRight className="w-5 h-5" />
-                    </Button>
-                  </motion.div>
-                </div>
-
-                <div className="mt-6 font-mono text-sm text-[#d1d5db] space-y-1">
-                  <div>$ npm install @mustafair/black-industrial</div>
-                  <div>$ npm run build --mode=production</div>
-                  <div>$ npm test --coverage --black</div>
-                  <div>$ npm run deploy --env=production</div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+          </div>
         </div>
+
+        {/* Command Line Interface */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 2.8, duration: 1 }}
+          whileHover={{
+            y: -6,
+            transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
+          }}
+          className="mt-24 max-w-4xl mx-auto"
+        >
+          <Card className="bg-black border-4 border-white shadow-[16px_16px_0px_0px_#666] hover:shadow-[20px_20px_0px_0px_#666] transition-all duration-500 ease-out">
+            <CardContent className="p-8">
+              <div className="flex items-center gap-4 mb-6">
+                <motion.div
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{
+                    duration: 4,
+                    repeat: Number.POSITIVE_INFINITY,
+                  }}
+                >
+                  <Wrench className="w-6 h-6 text-white" />
+                </motion.div>
+                <h2 className="text-white font-mono font-black text-2xl tracking-wider">
+                  DEPLOY MUSTAFAIR SYSTEM
+                </h2>
+              </div>
+
+              <div className="flex gap-4">
+                <Input
+                  placeholder="npm run deploy --production"
+                  className="bg-black border-3 border-white text-white placeholder:text-[#666] font-mono 
+                             shadow-[4px_4px_0px_0px_#666] focus:shadow-[6px_6px_0px_0px_#666] 
+                             hover:shadow-[5px_5px_0px_0px_#666] transition-all duration-300 ease-out
+                             focus:border-[#d1d5db] focus:outline-none focus:ring-0 flex-1"
+                />
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    className="bg-black hover:bg-[#1a1a1a] text-white font-mono font-bold px-6 border-3 border-white 
+                               shadow-[4px_4px_0px_0px_#666] hover:shadow-[6px_6px_0px_0px_#666] 
+                               transition-all duration-300 ease-out"
+                  >
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </motion.div>
+              </div>
+
+              <div className="mt-6 font-mono text-sm text-[#d1d5db] space-y-1">
+                <div>$ npm install @mustafair/black-industrial</div>
+                <div>$ npm run build --mode=production</div>
+                <div>$ npm test --coverage --black</div>
+                <div>$ npm run deploy --env=production</div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
-  )
+  );
 }
