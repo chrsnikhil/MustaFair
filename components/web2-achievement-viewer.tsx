@@ -63,18 +63,42 @@ export function Web2AchievementViewer() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchAchievements = async () => {
-    if (!session?.username || !session?.provider) return;
-
     setLoading(true);
     setError(null);
 
     try {
+      // If logged in with CARV ID, extract Web2 achievements from session
+      if (session?.provider === 'carv-id' && (session as any).web2Achievements) {
+        try {
+          const web2Data = typeof (session as any).web2Achievements === 'string' 
+            ? JSON.parse((session as any).web2Achievements)
+            : (session as any).web2Achievements;
+          
+          if (web2Data) {
+            setAchievements(web2Data);
+            setLoading(false);
+            return;
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse CARV ID Web2 achievements:', parseError);
+        }
+      }
+
+      // Fallback to traditional OAuth provider logic
+      if (!session?.username || !session?.provider) return;
+
       const identities = [];
       
       if (session.provider === 'github') {
         identities.push({ provider: 'github', username: session.username });
       } else if (session.provider === 'google' && session.user?.email) {
         identities.push({ provider: 'google', email: session.user.email });
+      }
+
+      if (identities.length === 0) {
+        setError('No Web2 identities found');
+        setLoading(false);
+        return;
       }
 
       const response = await fetch('/api/web2/achievements', {
@@ -97,7 +121,7 @@ export function Web2AchievementViewer() {
   };
 
   useEffect(() => {
-    if (session?.username) {
+    if (session && (session.username || session.provider === 'carv-id')) {
       fetchAchievements();
     }
   }, [session]);
@@ -106,7 +130,10 @@ export function Web2AchievementViewer() {
     return (
       <Card className="bg-black border-4 border-white shadow-[12px_12px_0px_0px_#666]">
         <CardContent className="p-6 text-center">
-          <p className="text-white font-mono">Please sign in to view Web2 achievements</p>
+          <p className="text-white font-mono mb-4">Connect your Web2 identity to view achievements</p>
+          <p className="text-[#d1d5db] font-mono text-sm">
+            Login with GitHub/Google or use Universal Login with CARV ID
+          </p>
         </CardContent>
       </Card>
     );
@@ -135,9 +162,16 @@ export function Web2AchievementViewer() {
               {loading ? 'FETCHING...' : 'REFRESH'}
             </Button>
             {achievements && (
-              <Badge className={`${tierColors[achievements.overallTier]} font-mono font-bold px-4 py-2 text-lg border-2 border-white ${tierShadows[achievements.overallTier]}`}>
-                {achievements.overallTier.toUpperCase()} TIER
-              </Badge>
+              <>
+                <Badge className={`${tierColors[achievements.overallTier]} font-mono font-bold px-4 py-2 text-lg border-2 border-white ${tierShadows[achievements.overallTier]}`}>
+                  {achievements.overallTier.toUpperCase()} TIER
+                </Badge>
+                {session?.provider === 'carv-id' && (
+                  <Badge className="bg-black text-white font-mono font-bold px-3 py-1 text-sm border-2 border-white">
+                    🛡️ FROM CARV ID
+                  </Badge>
+                )}
+              </>
             )}
           </div>
         </CardHeader>

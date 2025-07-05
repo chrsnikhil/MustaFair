@@ -369,28 +369,6 @@ export default function MustaFairBlackLanding() {
             </div>
           </motion.div>
 
-          {/* Web2 Binding Demo */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 2.0, duration: 1 }}
-            className="my-16 md:my-24"
-          >
-            <div className="text-center mb-8">
-              <h2
-                className="text-3xl lg:text-4xl font-black tracking-[0.1em] text-white uppercase"
-                style={{ textShadow: '2px 2px 0px #666' }}
-              >
-                Technical Architecture
-              </h2>
-              <p className="text-[#d1d5db] mt-2 max-w-2xl mx-auto font-mono tracking-wide">
-                CRYPTOGRAPHIC PROOF OF WEB2 ACTIVITIES • ZERO-KNOWLEDGE ACHIEVEMENTS
-              </p>
-            </div>
-            <div className="max-w-5xl mx-auto">
-              <Web2BindingDemo />
-            </div>
-          </motion.div>
         </div>
 
         {/* Feature Grid */}
