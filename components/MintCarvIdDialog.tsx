@@ -9,8 +9,9 @@ import { useSession } from "next-auth/react";
 import ModularCarvID_ABI_JSON from "@/lib/ModularCarvID_ABI.json";
 const ModularCarvID_ABI = ModularCarvID_ABI_JSON.abi;
 
-const CONTRACT_ADDRESS = "0x32A1BDa556796E7E62D37cffdAdFe4F06423fC6c";
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}` || "0x32A1BDa556796E7E62D37cffdAdFe4F06423fC6c" as `0x${string}`;
 const BNB_TESTNET_CHAIN_ID = 97;
+const LOCALHOST_CHAIN_ID = 1337;
 
 export default function MintCarvIdDialog() {
   const { data: session, status } = useSession();
@@ -22,20 +23,72 @@ export default function MintCarvIdDialog() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
-  function getIdentityHash(user: any, wallet: string) {
-    return "0x" + keccak_256(JSON.stringify({ ...user, wallet }));
+  function getIdentityHash(user: any, wallet: string, web2Achievements?: any) {
+    const identityData = {
+      ...user,
+      wallet,
+      web2Achievements: web2Achievements ? {
+        totalScore: web2Achievements.totalScore,
+        overallTier: web2Achievements.overallTier,
+        achievementHash: web2Achievements.achievementHash,
+        providers: web2Achievements.providers?.map((p: any) => ({
+          provider: p.provider,
+          score: p.achievements.score,
+          tier: p.achievements.tier
+        })),
+        badges: web2Achievements.combinedBadges,
+        lastUpdated: web2Achievements.metadata.lastUpdated
+      } : null
+    };
+    return "0x" + keccak_256(JSON.stringify(identityData));
+  }
+
+  async function fetchWeb2Achievements(user: any) {
+    try {
+      const identities = [];
+      
+      // Add GitHub identity if user logged in with GitHub
+      if (user.provider === 'github' && session?.username) {
+        identities.push({ provider: 'github', username: session.username });
+      }
+      
+      // Add Google identity if user logged in with Google
+      if (user.provider === 'google' && user.email) {
+        identities.push({ provider: 'google', email: user.email });
+      }
+
+      if (identities.length === 0) return null;
+
+      const response = await fetch('/api/web2/achievements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identities })
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (error) {
+      console.warn('Failed to fetch Web2 achievements:', error);
+    }
+    return null;
   }
 
   async function handleMint(user: any) {
     if (!walletClient) return alert("Wallet not connected");
-    if (chainId !== BNB_TESTNET_CHAIN_ID) {
-      return;
+    if (chainId !== BNB_TESTNET_CHAIN_ID && chainId !== LOCALHOST_CHAIN_ID) {
+      return alert("Please switch to BNB Testnet or Localhost");
     }
     setLoading(true);
     try {
-      const identityHash = getIdentityHash(user, address!);
+      // Fetch Web2 achievements before minting
+      const web2Achievements = await fetchWeb2Achievements(user);
+      
+      const identityHash = getIdentityHash(user, address!, web2Achievements);
       const { ethers } = await import("ethers");
-      const provider = window.ethereum;
+      const provider = (window as any).ethereum;
+      if (!provider) throw new Error("No Ethereum provider found");
+      
       const ethersProvider = new ethers.BrowserProvider(provider);
       const signer = await ethersProvider.getSigner();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ModularCarvID_ABI, signer);
@@ -54,6 +107,7 @@ export default function MintCarvIdDialog() {
         provider: session.provider,
         id: session.user.email, // fallback to email as unique id
         email: session.user.email,
+        username: session.username,
       }
     : null;
 
@@ -90,6 +144,17 @@ export default function MintCarvIdDialog() {
                 </div>
                 <div>
                   <span className="font-bold">Email:</span> {user.email}
+                </div>
+                {user.username && (
+                  <div>
+                    <span className="font-bold">Username:</span> {user.username}
+                  </div>
+                )}
+                <div className="mt-2 p-2 bg-green-100 border border-green-500 rounded">
+                  <div className="text-sm font-bold text-green-800">✓ Web2 Achievements Integration</div>
+                  <div className="text-xs text-green-700">
+                    Your {user.provider} achievements will be included in the CARV ID metadata
+                  </div>
                 </div>
               </div>
               {chainId !== undefined && chainId !== BNB_TESTNET_CHAIN_ID && (

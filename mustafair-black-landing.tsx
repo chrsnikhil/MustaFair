@@ -22,6 +22,8 @@ import { OAuthLogin } from './components/oauth-login';
 import { IdentityGraph } from './components/identity-graph';
 import MintCarvIdDialog from "@/components/MintCarvIdDialog";
 import { CarvIdPassportDialog } from "@/components/carv-id-viewer";
+import { Web2AchievementViewer } from "@/components/web2-achievement-viewer";
+import { Web2BindingDemo } from "@/components/web2-binding-demo";
 
 export default function MustaFairBlackLanding() {
   return (
@@ -324,6 +326,52 @@ export default function MustaFairBlackLanding() {
               <div className="flex justify-center">
                 <MintCarvIdDialog />
               </div>
+            </div>
+          </motion.div>
+
+          {/* Web2 Achievements Section */}
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1.8, duration: 1 }}
+            className="my-16 md:my-24"
+          >
+            <div className="text-center mb-8">
+              <h2
+                className="text-3xl lg:text-4xl font-black tracking-[0.1em] text-white uppercase"
+                style={{ textShadow: '2px 2px 0px #666' }}
+              >
+                Web2 Achievement Mining
+              </h2>
+              <p className="text-[#d1d5db] mt-2 max-w-2xl mx-auto font-mono tracking-wide">
+                BIND GITHUB COMMITS & GOOGLE DATA • ON-CHAIN REPUTATION SYSTEM
+              </p>
+            </div>
+            <div className="max-w-5xl mx-auto">
+              <Web2AchievementViewer />
+            </div>
+          </motion.div>
+
+          {/* Web2 Binding Demo */}
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 2.0, duration: 1 }}
+            className="my-16 md:my-24"
+          >
+            <div className="text-center mb-8">
+              <h2
+                className="text-3xl lg:text-4xl font-black tracking-[0.1em] text-white uppercase"
+                style={{ textShadow: '2px 2px 0px #666' }}
+              >
+                Technical Architecture
+              </h2>
+              <p className="text-[#d1d5db] mt-2 max-w-2xl mx-auto font-mono tracking-wide">
+                CRYPTOGRAPHIC PROOF OF WEB2 ACTIVITIES • ZERO-KNOWLEDGE ACHIEVEMENTS
+              </p>
+            </div>
+            <div className="max-w-5xl mx-auto">
+              <Web2BindingDemo />
             </div>
           </motion.div>
         </div>

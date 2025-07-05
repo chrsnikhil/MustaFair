@@ -1,11 +1,12 @@
 import { createConfig, http } from 'wagmi';
-import { bscTestnet } from 'wagmi/chains';
+import { bscTestnet, localhost } from 'wagmi/chains';
 import { metaMask } from 'wagmi/connectors';
 
 export const wagmiConfig = createConfig({
-  chains: [bscTestnet],
+  chains: [bscTestnet, localhost],
   connectors: [metaMask()],
   transports: {
     [bscTestnet.id]: http(),
+    [localhost.id]: http(),
   },
 }); 

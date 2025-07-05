@@ -8,9 +8,12 @@ declare module 'next-auth' {
       providerId: string;
       email?: string | null;
       name?: string | null;
+      username?: string;
       timestamp: number;
     };
     provider?: string;
+    accessToken?: string;
+    username?: string;
   }
 
   interface JWT {
@@ -20,8 +23,11 @@ declare module 'next-auth' {
       providerId: string;
       email?: string | null;
       name?: string | null;
+      username?: string;
       timestamp: number;
     };
     provider?: string;
+    accessToken?: string;
+    username?: string;
   }
 }

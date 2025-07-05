@@ -3,15 +3,17 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { useAccount, useReadContract } from "wagmi";
+import { useSession } from "next-auth/react";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, X } from "lucide-react";
 import carvIdAbiData from "@/lib/ModularCarvID_ABI.json";
-import { bscTestnet } from "wagmi/chains";
+import { bscTestnet, localhost } from "wagmi/chains";
 
-const contractAddress = "0x32A1BDa556796E7E62D37cffdAdFe4F06423fC6c";
+// Ensure the contract address is properly typed
+const contractAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x32A1BDa556796E7E62D37cffdAdFe4F06423fC6c") as `0x${string}`;
 const carvIdAbi = carvIdAbiData.abi;
 
 interface NftMetadata {
@@ -23,6 +25,7 @@ interface NftMetadata {
 
 export function CarvIdPassportDialog() {
   const { address, isConnected, chain } = useAccount();
+  const { data: session } = useSession();
   const [metadata, setMetadata] = useState<NftMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -32,25 +35,26 @@ export function CarvIdPassportDialog() {
   const [web2Error, setWeb2Error] = useState<string | null>(null);
   const [trustScore, setTrustScore] = useState<{ value: number; badge: string; explanation: string } | null>(null);
 
-  const isOnCorrectNetwork = chain?.id === bscTestnet.id;
+  const isOnCorrectNetwork = chain?.id === bscTestnet.id || chain?.id === localhost.id;
 
   const { data: tokenId, error: tokenIdError, isFetching: isFetchingTokenId } = useReadContract({
     address: contractAddress,
     abi: carvIdAbi,
     functionName: "walletToTokenId",
-    args: [address!],
+    args: address ? [address] : undefined,
     query: {
-      enabled: isConnected && isOnCorrectNetwork,
+      enabled: isConnected && isOnCorrectNetwork && !!address,
     },
   });
 
-  const hasToken = tokenId !== undefined && tokenId !== 0n;
+  // Check if user has a token - fix the logic to handle BigInt properly
+  const hasToken = tokenId !== undefined && tokenId !== null && Number(tokenId) > 0;
 
   const { data: tokenURI, error: tokenURIError, isFetching: isFetchingTokenURI } = useReadContract({
     address: contractAddress,
     abi: carvIdAbi,
     functionName: "tokenURI",
-    args: [tokenId!],
+    args: hasToken && tokenId ? [tokenId] : undefined,
     query: {
       enabled: hasToken,
     },
@@ -81,61 +85,116 @@ export function CarvIdPassportDialog() {
     setIsLoading(isFetchingTokenId || isFetchingTokenURI);
   }, [tokenURI, tokenIdError, tokenURIError, isFetchingTokenId, isFetchingTokenURI]);
 
-  // Fetch Web2 profile from CARV API when modal opens and address is available
+  // Fetch Web2 achievements when modal opens and address is available
   useEffect(() => {
     if (address && open) {
       setWeb2Loading(true);
       setWeb2Error(null);
-      fetch(`https://api.carv.io/v1/users/address/${address}`, {
-        headers: { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CARV_DATA_API_KEY}` }
+      
+      // Create identities array from session data
+      const identities = [];
+      
+      // Add GitHub identity if user is logged in with GitHub
+      if (session?.user && (session as any).provider === 'github' && (session as any).username) {
+        identities.push({ provider: 'github', username: (session as any).username });
+      }
+      
+      // Add Google identity if user is logged in with Google
+      if (session?.user && (session as any).provider === 'google' && session.user.email) {
+        identities.push({ provider: 'google', email: session.user.email });
+      }
+      
+      // If no session data, use demo data
+      if (identities.length === 0) {
+        identities.push({ provider: 'github', username: 'demo' });
+        identities.push({ provider: 'google', email: 'demo@example.com' });
+      }
+      
+      // Fetch Web2 achievements
+      fetch('/api/web2/achievements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identities })
       })
         .then(res => res.json())
         .then(data => {
-          setWeb2Profile(data && data.data ? data.data : null);
+          setWeb2Profile(data);
           setWeb2Loading(false);
         })
         .catch(() => {
-          setWeb2Error('Failed to fetch Web2 profile');
+          setWeb2Error('Failed to fetch Web2 achievements');
           setWeb2Loading(false);
         });
     }
-  }, [address, open]);
+  }, [address, open, session]);
 
-  // Compute a demo trust score based on linked accounts
+  // Compute trust score based on Web2 achievements and metadata
   useEffect(() => {
-    if (web2Profile && metadata) {
-      let score = 50;
+    if (web2Profile || metadata) {
+      let score = 30; // Base score
       let badge = "New User";
       let explanation = "Base score for CARV ID holder.";
-      if (web2Profile.twitter && web2Profile.twitter.verified) {
-        score += 30;
-        explanation += " Verified Twitter linked.";
+      
+      // Add score from Web2 achievements
+      if (web2Profile && web2Profile.totalScore) {
+        score += Math.min(web2Profile.totalScore / 10, 50); // Scale achievements score
+        explanation += ` Web2 achievements: ${web2Profile.totalScore} pts.`;
+        
+        if (web2Profile.overallTier === 'Gold') {
+          score += 20;
+          explanation += " Gold tier bonus.";
+        } else if (web2Profile.overallTier === 'Silver') {
+          score += 10;
+          explanation += " Silver tier bonus.";
+        }
       }
-      if (web2Profile.discord) {
-        score += 20;
-        explanation += " Discord linked.";
+      
+      // Add score from NFT metadata
+      if (metadata && metadata.attributes) {
+        const hasNFTs = metadata.attributes.find(a => a.trait_type === "NFTs");
+        if (hasNFTs) {
+          score += 10;
+          explanation += " NFT activity detected.";
+        }
       }
-      if (metadata.attributes?.find(a => a.trait_type === "NFTs")) {
-        score += 10;
-        explanation += " NFT activity detected.";
-      }
+      
+      // Determine badge based on score
       if (score > 90) badge = "Trusted";
       else if (score > 70) badge = "Active";
-      setTrustScore({ value: score, badge, explanation });
+      else if (score > 50) badge = "Verified";
+      
+      setTrustScore({ value: Math.round(score), badge, explanation });
     }
   }, [web2Profile, metadata]);
 
   // Button is only enabled if user is connected and has a CARV ID
   const canView = isConnected && isOnCorrectNetwork && hasToken;
 
+  // Get button text and tooltip based on state
+  const getButtonState = () => {
+    if (!isConnected) {
+      return { text: "Connect Wallet First", disabled: true };
+    }
+    if (!isOnCorrectNetwork) {
+      return { text: "Switch to BNB Testnet/Localhost", disabled: true };
+    }
+    if (!hasToken) {
+      return { text: "Mint CARV ID First", disabled: true };
+    }
+    return { text: "View CARV ID", disabled: false };
+  };
+
+  const buttonState = getButtonState();
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           className="bg-black text-white font-black font-mono px-6 py-2 border-4 border-white shadow-[6px_6px_0px_0px_#666] hover:shadow-[8px_8px_0px_0px_#666] transition-all duration-300 tracking-wider text-base transform -skew-x-1"
-          disabled={!canView}
+          disabled={buttonState.disabled}
+          title={buttonState.disabled ? buttonState.text : "View your CARV ID passport"}
         >
-          View CARV ID
+          {buttonState.text}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md w-full bg-black border-4 border-white shadow-[20px_20px_0px_0px_#666] p-0 overflow-hidden max-h-[90vh]">
@@ -188,30 +247,41 @@ export function CarvIdPassportDialog() {
                   {metadata.description}
                 </p>
               </div>
-              {/* Web2 Profile Section */}
+              {/* Web2 Achievements Section */}
               {web2Loading ? (
                 <Skeleton className="h-6 w-40" />
               ) : web2Profile && typeof web2Profile === 'object' ? (
-                <div className="w-full text-center flex flex-col items-center gap-1">
-                  <h3 className="text-xs font-mono text-[#d1d5db] tracking-widest mb-1">Web2 Profile</h3>
-                  {web2Profile.twitter && typeof web2Profile.twitter === 'object' && (
-                    <div className="flex items-center gap-2">
-                      {typeof web2Profile.twitter.avatar_url === 'string' && (
-                        <img src={web2Profile.twitter.avatar_url} alt="Twitter" className="w-5 h-5 rounded-full" />
-                      )}
-                      <span className="text-xs font-mono text-white">@{typeof web2Profile.twitter.username === 'string' ? web2Profile.twitter.username : ''}</span>
-                      {web2Profile.twitter.verified && <span className="text-green-400 ml-1">✔</span>}
+                <div className="w-full text-center flex flex-col items-center gap-2">
+                  <h3 className="text-xs font-mono text-[#d1d5db] tracking-widest mb-1">Web2 Achievements</h3>
+                  <div className="flex flex-col gap-1">
+                    <div className="text-sm font-mono text-white">
+                      Total Score: <span className="font-bold">{web2Profile.totalScore || 0}</span>
                     </div>
-                  )}
-                  {web2Profile.discord && typeof web2Profile.discord === 'object' && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-white">{typeof web2Profile.discord.username === 'string' ? web2Profile.discord.username : ''}</span>
+                    <div className="text-xs text-[#d1d5db]">
+                      Tier: <span className="font-bold text-white">{web2Profile.overallTier || 'Bronze'}</span>
                     </div>
-                  )}
-                  {/* Add more socials as needed */}
+                    {web2Profile.combinedBadges && web2Profile.combinedBadges.length > 0 && (
+                      <div className="flex flex-wrap gap-1 justify-center mt-1">
+                        {web2Profile.combinedBadges.slice(0, 3).map((badge: string, index: number) => (
+                          <span key={index} className="text-xs bg-[#222] border border-white rounded px-2 py-1">
+                            {badge}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {web2Profile.providers && web2Profile.providers.length > 0 && (
+                      <div className="text-xs text-[#999] mt-1">
+                        {web2Profile.providers.map((p: any, index: number) => (
+                          <div key={index}>
+                            {p.provider}: {p.achievements?.score || 0} pts
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
-                <div className="text-xs text-[#999]">No Web2 profile linked.</div>
+                <div className="text-xs text-[#999]">No Web2 achievements found.</div>
               )}
               {/* Divider */}
               <div className="w-full border-t-2 border-[#333] my-1" />
@@ -227,22 +297,33 @@ export function CarvIdPassportDialog() {
               <div className="w-full border-t-2 border-[#333] my-1" />
               {/* Footer Section */}
               <div className="w-full flex flex-col items-center gap-0.5 mt-1">
-                <span className="text-xs font-mono text-[#999]">Token ID: <span className="font-bold text-white">{tokenId?.toString()}</span></span>
-                <span className="text-xs font-mono text-[#999]">Wallet: <span className="font-bold text-white">{address?.slice(0, 6)}...{address?.slice(-4)}</span></span>
-                <span className="text-xs font-mono text-[#999]">Network: <span className="font-bold text-white">BNB Testnet</span></span>
-                {tokenId && (
+                <span className="text-xs font-mono text-[#999]">
+                  Token ID: <span className="font-bold text-white">{tokenId ? String(tokenId) : 'N/A'}</span>
+                </span>
+                <span className="text-xs font-mono text-[#999]">
+                  Wallet: <span className="font-bold text-white">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
+                </span>
+                <span className="text-xs font-mono text-[#999]">
+                  Network: <span className="font-bold text-white">{chain?.id === localhost.id ? 'Localhost' : 'BNB Testnet'}</span>
+                </span>
+                {tokenId ? (
                   <a
-                    href={`https://testnet.bscscan.com/token/${contractAddress}?a=${tokenId.toString()}`}
+                    href={chain?.id === localhost.id 
+                      ? `http://localhost:8545` 
+                      : `https://testnet.bscscan.com/token/${contractAddress}?a=${String(tokenId)}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-2 inline-block bg-white text-black font-black font-mono px-4 py-1 border-4 border-white shadow-[6px_6px_0px_0px_#666] hover:shadow-[8px_8px_0px_0px_#666] transition-all duration-300 tracking-wider text-xs transform -skew-x-1 rounded"
                   >
-                    View on BscScan
+                    {chain?.id === localhost.id ? 'View on Localhost' : 'View on BscScan'}
                   </a>
-                )}
+                ) : null}
               </div>
             </div>
-          ) : (<></>)}
+          ) : (
+            <div className="text-xs text-[#999]">No CARV ID found.</div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
