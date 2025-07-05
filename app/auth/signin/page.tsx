@@ -3,15 +3,17 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   getProviders,
   signIn,
   getSession,
   ClientSafeProvider,
 } from 'next-auth/react';
-import { Github, Chrome, ArrowRight, Shield, Link2, Hash } from 'lucide-react';
+import { Github, Chrome, ArrowRight, Shield, Link2, Hash, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CarvIdLogin } from '@/components/carv-id-login';
 
 export default function SignInPage() {
   const [providers, setProviders] = useState<Record<
@@ -72,69 +74,122 @@ export default function SignInPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Identity Hash Preview */}
-            <motion.div
-              className="bg-[#333] border-2 border-white p-4 font-mono text-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="flex items-center gap-2 text-white mb-2">
-                <Hash className="w-4 h-4" />
-                <span className="font-black tracking-wider">
-                  IDENTITY HASH PREVIEW
-                </span>
-              </div>
-              <div className="text-[#d1d5db] break-all text-xs">
-                Your OAuth identity will be cryptographically hashed for
-                blockchain storage
-              </div>
-              <div className="flex items-center gap-2 mt-3 text-[#d1d5db]">
-                <Link2 className="w-4 h-4" />
-                <span className="text-xs">
-                  Ready for ERC-7231 wallet linking
-                </span>
-              </div>
-            </motion.div>
+            {/* Universal Login Tabs */}
+            <Tabs defaultValue="web2" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-[#333] border-2 border-white p-1">
+                <TabsTrigger 
+                  value="web2" 
+                  className="font-mono font-black tracking-wider text-white data-[state=active]:bg-white data-[state=active]:text-black"
+                >
+                  <Chrome className="w-4 h-4 mr-2" />
+                  WEB2 LOGIN
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="carv-id" 
+                  className="font-mono font-black tracking-wider text-white data-[state=active]:bg-white data-[state=active]:text-black"
+                >
+                  <Wallet className="w-4 h-4 mr-2" />
+                  CARV ID
+                </TabsTrigger>
+              </TabsList>
 
-            {/* OAuth Providers */}
-            <div className="space-y-4">
-              {providers &&
-                Object.values(providers).map(provider => {
-                  const isGoogle = provider.id === 'google';
-                  const isGitHub = provider.id === 'github';
-                  const isLoading = loading === provider.id;
+              <TabsContent value="web2" className="space-y-4 mt-6">
+                {/* Identity Hash Preview */}
+                <motion.div
+                  className="bg-[#333] border-2 border-white p-4 font-mono text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <div className="flex items-center gap-2 text-white mb-2">
+                    <Hash className="w-4 h-4" />
+                    <span className="font-black tracking-wider">
+                      IDENTITY HASH PREVIEW
+                    </span>
+                  </div>
+                  <div className="text-[#d1d5db] break-all text-xs">
+                    Your OAuth identity will be cryptographically hashed for
+                    blockchain storage
+                  </div>
+                  <div className="flex items-center gap-2 mt-3 text-[#d1d5db]">
+                    <Link2 className="w-4 h-4" />
+                    <span className="text-xs">
+                      Ready for ERC-7231 wallet linking
+                    </span>
+                  </div>
+                </motion.div>
 
-                  return (
-                    <motion.div
-                      key={provider.name}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Button
-                        onClick={() => handleSignIn(provider.id)}
-                        disabled={isLoading}
-                        className={`w-full h-14 font-mono font-black tracking-[0.1em] border-4 border-white shadow-[8px_8px_0px_0px_#666] hover:shadow-[12px_12px_0px_0px_#666] transition-all duration-300 transform skew-x-1 ${
-                          isGoogle
-                            ? 'bg-white text-black hover:bg-[#d1d5db]'
-                            : 'bg-black text-white hover:bg-[#333]'
-                        }`}
-                      >
-                        <div className="flex items-center justify-center gap-3 w-full">
-                          {isGoogle && <Chrome className="w-6 h-6" />}
-                          {isGitHub && <Github className="w-6 h-6" />}
-                          <span className="flex-1 text-center">
-                            {isLoading
-                              ? 'CONNECTING...'
-                              : `CONNECT ${provider.name.toUpperCase()}`}
-                          </span>
-                          <ArrowRight className="w-5 h-5" />
-                        </div>
-                      </Button>
-                    </motion.div>
-                  );
-                })}
-            </div>
+                {/* OAuth Providers */}
+                <div className="space-y-4">
+                  {providers &&
+                    Object.values(providers)
+                      .filter(provider => provider.id !== 'carv-id') // Exclude CARV ID from Web2 tab
+                      .map(provider => {
+                        const isGoogle = provider.id === 'google';
+                        const isGitHub = provider.id === 'github';
+                        const isLoading = loading === provider.id;
+
+                        return (
+                          <motion.div
+                            key={provider.name}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Button
+                              onClick={() => handleSignIn(provider.id)}
+                              disabled={isLoading}
+                              className={`w-full h-14 font-mono font-black tracking-[0.1em] border-4 border-white shadow-[8px_8px_0px_0px_#666] hover:shadow-[12px_12px_0px_0px_#666] transition-all duration-300 transform skew-x-1 ${
+                                isGoogle
+                                  ? 'bg-white text-black hover:bg-[#d1d5db]'
+                                  : 'bg-black text-white hover:bg-[#333]'
+                              }`}
+                            >
+                              <div className="flex items-center justify-center gap-3 w-full">
+                                {isGoogle && <Chrome className="w-6 h-6" />}
+                                {isGitHub && <Github className="w-6 h-6" />}
+                                <span className="flex-1 text-center">
+                                  {isLoading
+                                    ? 'CONNECTING...'
+                                    : `CONNECT ${provider.name.toUpperCase()}`}
+                                </span>
+                                <ArrowRight className="w-5 h-5" />
+                              </div>
+                            </Button>
+                          </motion.div>
+                        );
+                      })}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="carv-id" className="space-y-4 mt-6">
+                {/* CARV ID Description */}
+                <motion.div
+                  className="bg-[#333] border-2 border-white p-4 font-mono text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <div className="flex items-center gap-2 text-white mb-2">
+                    <Wallet className="w-4 h-4" />
+                    <span className="font-black tracking-wider">
+                      UNIVERSAL WEB3 LOGIN
+                    </span>
+                  </div>
+                  <div className="text-[#d1d5db] break-all text-xs">
+                    Login with your CARV ID NFT - the ultimate decentralized identity
+                  </div>
+                  <div className="flex items-center gap-2 mt-3 text-[#d1d5db]">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-xs">
+                      Own your identity, control your reputation
+                    </span>
+                  </div>
+                </motion.div>
+
+                {/* CARV ID Login Component */}
+                <CarvIdLogin />
+              </TabsContent>
+            </Tabs>
 
             {/* Security Notice */}
             <motion.div

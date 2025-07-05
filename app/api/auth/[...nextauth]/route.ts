@@ -2,9 +2,11 @@ import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import { createHash } from 'crypto';
+import { CarvIdProvider } from '@/lib/carv-id-provider';
 
 const handler = NextAuth({
   providers: [
+    CarvIdProvider,
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -25,7 +27,20 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
+      // Handle CARV ID authentication
+      if (user && account?.provider === 'carv-id') {
+        token.identityHash = (user as any).identityHash;
+        token.identityData = (user as any).identityData;
+        token.provider = 'carv-id';
+        token.tokenId = (user as any).tokenId;
+        token.address = (user as any).address;
+        token.metadata = (user as any).metadata;
+        token.web2Achievements = (user as any).web2Achievements;
+        return token;
+      }
+
+      // Handle Web2 providers (GitHub, Google)
       if (account && profile) {
         // Store access token for API calls
         token.accessToken = account.access_token;
@@ -70,6 +85,15 @@ const handler = NextAuth({
       session.provider = token.provider as string;
       session.accessToken = token.accessToken as string;
       session.username = token.username as string;
+      
+      // Add CARV ID specific data
+      if (token.provider === 'carv-id') {
+        (session as any).tokenId = token.tokenId;
+        (session as any).address = token.address;
+        (session as any).metadata = token.metadata;
+        (session as any).web2Achievements = token.web2Achievements;
+      }
+      
       return session;
     },
   },

@@ -16,6 +16,7 @@ import {
   ArrowRight,
   Power,
   Zap,
+  LogIn,
 } from 'lucide-react';
 import { LoginButton } from './components/providers';
 import { OAuthLogin } from './components/oauth-login';
@@ -24,8 +25,12 @@ import MintCarvIdDialog from "@/components/MintCarvIdDialog";
 import { CarvIdPassportDialog } from "@/components/carv-id-viewer";
 import { Web2AchievementViewer } from "@/components/web2-achievement-viewer";
 import { Web2BindingDemo } from "@/components/web2-binding-demo";
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 
 export default function MustaFairBlackLanding() {
+  const { data: session, status } = useSession();
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       {/* Matte Background */}
@@ -58,6 +63,18 @@ export default function MustaFairBlackLanding() {
             MUSTAFAIR.SYS
           </motion.div>
           <div className="flex gap-4 items-center">
+            {!session ? (
+              <Link href="/auth/signin">
+                <Button className="bg-black text-white font-mono px-4 py-2 border-2 border-white shadow-[3px_3px_0px_0px_#666] hover:shadow-[5px_5px_0px_0px_#666] transition-all duration-300 rounded-none text-xs tracking-widest">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  UNIVERSAL LOGIN
+                </Button>
+              </Link>
+            ) : (
+              <div className="font-mono text-white text-xs tracking-widest bg-[#333] px-4 py-2 border-2 border-white">
+                {session.provider === 'carv-id' ? '🛡️ CARV ID' : `✓ ${session.provider?.toUpperCase()}`}
+              </div>
+            )}
             <OAuthLogin navStyle />
             <LoginButton navStyle />
             <CarvIdPassportDialog />
@@ -352,28 +369,6 @@ export default function MustaFairBlackLanding() {
             </div>
           </motion.div>
 
-          {/* Web2 Binding Demo */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 2.0, duration: 1 }}
-            className="my-16 md:my-24"
-          >
-            <div className="text-center mb-8">
-              <h2
-                className="text-3xl lg:text-4xl font-black tracking-[0.1em] text-white uppercase"
-                style={{ textShadow: '2px 2px 0px #666' }}
-              >
-                Technical Architecture
-              </h2>
-              <p className="text-[#d1d5db] mt-2 max-w-2xl mx-auto font-mono tracking-wide">
-                CRYPTOGRAPHIC PROOF OF WEB2 ACTIVITIES • ZERO-KNOWLEDGE ACHIEVEMENTS
-              </p>
-            </div>
-            <div className="max-w-5xl mx-auto">
-              <Web2BindingDemo />
-            </div>
-          </motion.div>
         </div>
 
         {/* Feature Grid */}

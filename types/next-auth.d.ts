@@ -10,10 +10,20 @@ declare module 'next-auth' {
       name?: string | null;
       username?: string;
       timestamp: number;
+      // CARV ID specific fields
+      tokenId?: string;
+      address?: string;
+      metadata?: any;
+      web2Achievements?: any;
     };
     provider?: string;
     accessToken?: string;
     username?: string;
+    // CARV ID specific session fields
+    tokenId?: string;
+    address?: string;
+    metadata?: any;
+    web2Achievements?: any;
   }
 
   interface JWT {
@@ -25,9 +35,19 @@ declare module 'next-auth' {
       name?: string | null;
       username?: string;
       timestamp: number;
+      // CARV ID specific fields
+      tokenId?: string;
+      address?: string;
+      metadata?: any;
+      web2Achievements?: any;
     };
     provider?: string;
     accessToken?: string;
     username?: string;
+    // CARV ID specific JWT fields
+    tokenId?: string;
+    address?: string;
+    metadata?: any;
+    web2Achievements?: any;
   }
 }
