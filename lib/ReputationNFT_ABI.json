@@ -390,8 +390,65 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "postId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "voter",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "support",
+        "type": "bool"
+      }
+    ],
+    "name": "PostVoteCast",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "postId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "passed",
+        "type": "bool"
+      }
+    ],
+    "name": "PostExecuted",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "MIN_VOTES_REQUIRED",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "POST_VOTING_PERIOD",
     "outputs": [
       {
         "internalType": "uint256",
@@ -469,6 +526,19 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "votingDeadline",
+        "type": "uint256"
+      }
+    ],
+    "name": "createPost",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
       }
@@ -487,6 +557,19 @@
       }
     ],
     "name": "executeTierUpgrade",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "postId",
+        "type": "uint256"
+      }
+    ],
+    "name": "executePost",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -557,6 +640,40 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "postId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPostVote",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "votesFor",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "votesAgainst",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "votingDeadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isExecuted",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "wallet",
         "type": "address"
@@ -612,6 +729,30 @@
       }
     ],
     "name": "hasVotedOnProposal",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "postId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "voter",
+        "type": "address"
+      }
+    ],
+    "name": "hasVotedOnPost",
     "outputs": [
       {
         "internalType": "bool",
@@ -1042,6 +1183,24 @@
       }
     ],
     "name": "voteOnTierUpgrade",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "postId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "support",
+        "type": "bool"
+      }
+    ],
+    "name": "voteOnPost",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

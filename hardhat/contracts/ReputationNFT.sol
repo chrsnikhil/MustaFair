@@ -43,16 +43,28 @@ contract ReputationNFT is ERC721, Ownable, ReentrancyGuard {
         mapping(address => bool) hasVoted;
     }
 
+    // Post voting system (gas-optimized)
+    struct PostVote {
+        uint256 votesFor;
+        uint256 votesAgainst;
+        uint256 votingDeadline;
+        bool isExecuted;
+        mapping(address => bool) hasVoted;
+    }
+
     // State variables
     mapping(uint256 => ReputationData) public reputations;
     mapping(address => uint256) public walletToRepNFT;
     mapping(uint256 => TierUpgradeProposal) public tierUpgradeProposals;
+    mapping(uint256 => PostVote) public postVotes; // New: Post voting storage
     
     IModularCarvID public carvIdContract;
     uint256 private _nextTokenId = 1;
     uint256 private _nextProposalId = 1;
+    uint256 private _nextPostId = 1; // New: Post ID counter
     uint256 public constant VOTING_PERIOD = 7 days;
     uint256 public constant MIN_VOTES_REQUIRED = 3; // Minimum votes for proposal to pass
+    uint256 public constant POST_VOTING_PERIOD = 7 days; // New: Post voting period
 
     // Events
     event ReputationNFTMinted(
@@ -84,6 +96,16 @@ contract ReputationNFT is ERC721, Ownable, ReentrancyGuard {
         uint256 indexed tokenId,
         uint256 oldScore,
         uint256 newScore
+    );
+    // New: Post voting events
+    event PostVoteCast(
+        uint256 indexed postId,
+        address indexed voter,
+        bool support
+    );
+    event PostExecuted(
+        uint256 indexed postId,
+        bool passed
     );
 
     constructor(address _carvIdContract) ERC721("Reputation NFT", "REPNFT") Ownable(msg.sender) {
@@ -369,5 +391,95 @@ contract ReputationNFT is ERC721, Ownable, ReentrancyGuard {
     function deactivateNFT(uint256 tokenId) external onlyOwner {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
         reputations[tokenId].isActive = false;
+    }
+
+    /**
+     * @notice Vote on a post (gas-optimized version)
+     * @param postId The post ID to vote on
+     * @param support True to vote for, false to vote against
+     */
+    function voteOnPost(
+        uint256 postId,
+        bool support
+    ) external {
+        PostVote storage vote = postVotes[postId];
+        
+        require(block.timestamp <= vote.votingDeadline, "Voting period ended");
+        require(!vote.isExecuted, "Post already executed");
+        require(!vote.hasVoted[msg.sender], "Already voted");
+        require(balanceOf(msg.sender) > 0, "Must own a reputation NFT to vote");
+        
+        vote.hasVoted[msg.sender] = true;
+        
+        if (support) {
+            vote.votesFor++;
+        } else {
+            vote.votesAgainst++;
+        }
+        
+        emit PostVoteCast(postId, msg.sender, support);
+    }
+
+    /**
+     * @notice Execute a post vote if it passed
+     * @param postId The post ID to execute
+     */
+    function executePost(uint256 postId) external {
+        PostVote storage vote = postVotes[postId];
+        
+        require(block.timestamp > vote.votingDeadline, "Voting period not ended");
+        require(!vote.isExecuted, "Post already executed");
+        require(
+            vote.votesFor > vote.votesAgainst && 
+            vote.votesFor >= MIN_VOTES_REQUIRED,
+            "Post did not pass"
+        );
+        
+        vote.isExecuted = true;
+        
+        emit PostExecuted(postId, true);
+    }
+
+    /**
+     * @notice Create a new post for voting
+     * @param votingDeadline The deadline for voting (timestamp)
+     */
+    function createPost(uint256 votingDeadline) external {
+        require(votingDeadline > block.timestamp, "Deadline must be in the future");
+        require(balanceOf(msg.sender) > 0, "Must own a reputation NFT to create posts");
+        
+        uint256 postId = _nextPostId++;
+        PostVote storage vote = postVotes[postId];
+        
+        vote.votingDeadline = votingDeadline;
+        vote.isExecuted = false;
+    }
+
+    /**
+     * @notice Get post vote details
+     * @param postId The post ID to query
+     */
+    function getPostVote(uint256 postId) external view returns (
+        uint256 votesFor,
+        uint256 votesAgainst,
+        uint256 votingDeadline,
+        bool isExecuted
+    ) {
+        PostVote storage vote = postVotes[postId];
+        return (
+            vote.votesFor,
+            vote.votesAgainst,
+            vote.votingDeadline,
+            vote.isExecuted
+        );
+    }
+
+    /**
+     * @notice Check if an address has voted on a post
+     * @param postId The post ID
+     * @param voter The voter address
+     */
+    function hasVotedOnPost(uint256 postId, address voter) external view returns (bool) {
+        return postVotes[postId].hasVoted[voter];
     }
 }

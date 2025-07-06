@@ -32,14 +32,14 @@ const provider = new ethers.JsonRpcProvider('https://data-seed-prebsc-1-s1.binan
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const { address } = params;
+    const { address } = await params;
     
     if (!ethers.isAddress(address)) {
       return NextResponse.json(
-        { error: 'Invalid wallet address' },
+        { error: 'Invalid address format' },
         { status: 400 }
       );
     }

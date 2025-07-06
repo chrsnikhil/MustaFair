@@ -32,15 +32,15 @@ const provider = new ethers.JsonRpcProvider('https://data-seed-prebsc-1-s1.binan
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ proposalId: string }> }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const { proposalId } = await params;
-    const proposalIdNum = parseInt(proposalId);
+    const { postId } = await params;
+    const postIdNum = parseInt(postId);
     
-    if (isNaN(proposalIdNum) || proposalIdNum <= 0) {
+    if (isNaN(postIdNum) || postIdNum <= 0) {
       return NextResponse.json(
-        { error: 'Invalid proposal ID' },
+        { error: 'Invalid post ID' },
         { status: 400 }
       );
     }
@@ -60,31 +60,25 @@ export async function GET(
     );
 
     try {
-      const proposalData = await contract.getProposal(proposalIdNum);
-      const [tokenId, proposedTier, votesFor, votesAgainst, proposalDeadline, isExecuted] = proposalData;
-      
-      const tierNames = ['Bronze', 'Silver', 'Gold', 'Platinum'];
-      const proposedTierName = tierNames[Number(proposedTier)];
+      const postVoteData = await contract.getPostVote(postIdNum);
+      const [votesFor, votesAgainst, votingDeadline, isExecuted] = postVoteData;
       
       // Get current time to check if voting is still active
       const currentTime = Math.floor(Date.now() / 1000);
-      const isVotingActive = currentTime <= Number(proposalDeadline) && !isExecuted;
+      const isVotingActive = currentTime <= Number(votingDeadline) && !isExecuted;
       
-      // Calculate if proposal is passing
+      // Calculate if post is passing
       const totalVotes = Number(votesFor) + Number(votesAgainst);
       const isPassing = Number(votesFor) > Number(votesAgainst) && Number(votesFor) >= 3; // MIN_VOTES_REQUIRED
       
       const response = {
         success: true,
         data: {
-          proposalId: proposalIdNum,
-          tokenId: tokenId.toString(),
-          proposedTier: proposedTierName,
-          proposedTierLevel: Number(proposedTier),
+          postId: postIdNum,
           votesFor: Number(votesFor),
           votesAgainst: Number(votesAgainst),
           totalVotes,
-          proposalDeadline: new Date(Number(proposalDeadline) * 1000).toISOString(),
+          votingDeadline: new Date(Number(votingDeadline) * 1000).toISOString(),
           isExecuted,
           isVotingActive,
           isPassing,
@@ -98,10 +92,10 @@ export async function GET(
       return NextResponse.json(response);
       
     } catch (contractError: any) {
-      if (contractError.reason && contractError.reason.includes('Invalid proposal')) {
+      if (contractError.reason && contractError.reason.includes('Invalid post')) {
         return NextResponse.json({
           success: false,
-          error: 'Proposal not found'
+          error: 'Post not found'
         }, { status: 404 });
       }
       
@@ -109,10 +103,10 @@ export async function GET(
     }
 
   } catch (error: any) {
-    console.error('Error fetching proposal data:', error);
+    console.error('Error fetching post vote data:', error);
     return NextResponse.json(
       { 
-        error: 'Failed to fetch proposal data',
+        error: 'Failed to fetch post vote data',
         details: error.message
       },
       { status: 500 }
@@ -122,22 +116,19 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ proposalId: string }> }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const { proposalId } = await params;
+    const { postId } = await params;
     const body = await request.json();
     const { action, ...actionData } = body;
 
-    // For creating proposals, we don't need a valid proposal ID
-    if (action !== 'create') {
-      const proposalIdNum = parseInt(proposalId);
-      if (isNaN(proposalIdNum) || proposalIdNum <= 0) {
-        return NextResponse.json(
-          { error: 'Invalid proposal ID' },
-          { status: 400 }
-        );
-      }
+    const postIdNum = parseInt(postId);
+    if (isNaN(postIdNum) || postIdNum <= 0) {
+      return NextResponse.json(
+        { error: 'Invalid post ID' },
+        { status: 400 }
+      );
     }
 
     const contractInfo = getContractInfo();
@@ -156,8 +147,7 @@ export async function POST(
 
     switch (action) {
       case 'vote':
-        const proposalIdNum = parseInt(proposalId);
-        const { support, reason = '', voterAddress } = actionData;
+        const { support, voterAddress } = actionData;
         
         if (typeof support !== 'boolean') {
           return NextResponse.json(
@@ -178,10 +168,9 @@ export async function POST(
           message: 'Vote transaction data prepared',
           transactionData: {
             to: contractInfo.address,
-            data: contract.interface.encodeFunctionData('voteOnTierUpgrade', [
-              parseInt(proposalId),
-              support,
-              reason
+            data: contract.interface.encodeFunctionData('voteOnPost', [
+              postIdNum,
+              support
             ])
           }
         });
@@ -189,47 +178,32 @@ export async function POST(
       case 'execute':
         return NextResponse.json({
           success: true,
-          message: 'Execute proposal transaction data prepared',
+          message: 'Execute post transaction data prepared',
           transactionData: {
             to: contractInfo.address,
-            data: contract.interface.encodeFunctionData('executeTierUpgrade', [
-              parseInt(proposalId)
+            data: contract.interface.encodeFunctionData('executePost', [
+              postIdNum
             ])
           }
         });
 
       case 'create':
-        const { tokenId, proposedTier } = actionData;
+        const { votingDeadline } = actionData;
         
-        if (!tokenId || isNaN(parseInt(tokenId))) {
+        if (!votingDeadline || isNaN(parseInt(votingDeadline))) {
           return NextResponse.json(
-            { error: 'Invalid token ID' },
-            { status: 400 }
-          );
-        }
-
-        const tierMap: { [key: string]: number } = {
-          'Bronze': 0,
-          'Silver': 1, 
-          'Gold': 2,
-          'Platinum': 3
-        };
-
-        if (!(proposedTier in tierMap)) {
-          return NextResponse.json(
-            { error: 'Invalid tier. Must be Bronze, Silver, Gold, or Platinum' },
+            { error: 'Invalid voting deadline' },
             { status: 400 }
           );
         }
 
         return NextResponse.json({
           success: true,
-          message: 'Create proposal transaction data prepared',
+          message: 'Create post transaction data prepared',
           transactionData: {
             to: contractInfo.address,
-            data: contract.interface.encodeFunctionData('proposeTierUpgrade', [
-              parseInt(tokenId),
-              tierMap[proposedTier]
+            data: contract.interface.encodeFunctionData('createPost', [
+              parseInt(votingDeadline)
             ])
           }
         });
@@ -242,13 +216,13 @@ export async function POST(
     }
 
   } catch (error: any) {
-    console.error('Error processing voting action:', error);
+    console.error('Error processing post voting action:', error);
     return NextResponse.json(
       { 
-        error: 'Failed to process voting action',
+        error: 'Failed to process post voting action',
         details: error.message
       },
       { status: 500 }
     );
   }
-}
+} 
