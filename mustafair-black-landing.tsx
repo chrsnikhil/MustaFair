@@ -25,6 +25,7 @@ import MintCarvIdDialog from "@/components/MintCarvIdDialog";
 import { CarvIdPassportDialog } from "@/components/carv-id-viewer";
 import { Web2AchievementViewer } from "@/components/web2-achievement-viewer";
 import { Web2BindingDemo } from "@/components/web2-binding-demo";
+import ContractStatusChecker from "@/components/contract-status-checker";
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
@@ -370,6 +371,16 @@ export default function MustaFairBlackLanding() {
           </motion.div>
 
         </div>
+
+        {/* Contract Status Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="mt-16"
+        >
+          <ContractStatusChecker />
+        </motion.div>
 
         {/* Feature Grid */}
         <div className="mt-24">

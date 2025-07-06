@@ -13,8 +13,8 @@ import carvIdAbiData from "@/lib/ModularCarvID_ABI.json";
 import { bscTestnet, localhost } from "wagmi/chains";
 
 // Ensure the contract address is properly typed
-const contractAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x32A1BDa556796E7E62D37cffdAdFe4F06423fC6c") as `0x${string}`;
-const carvIdAbi = carvIdAbiData.abi;
+const contractAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x59C3fed3153866A139e8efBA185da2BD083fF034") as `0x${string}`;
+const carvIdAbi = carvIdAbiData;
 
 interface NftMetadata {
   name: string;

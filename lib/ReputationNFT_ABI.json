@@ -1,6 +1,12 @@
 [
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_carvIdContract",
+        "type": "address"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
@@ -130,6 +136,11 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -184,24 +195,24 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "indexed": true,
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
       },
       {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "identitiesRoot",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "oldScore",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newScore",
+        "type": "uint256"
       }
     ],
-    "name": "CarvIdMinted",
+    "name": "ContributionScoreUpdated",
     "type": "event"
   },
   {
@@ -221,6 +232,105 @@
       }
     ],
     "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "contributionScore",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "tier",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "carvIdHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "ReputationNFTMinted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "proposalId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "currentTier",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "proposedTier",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "proposer",
+        "type": "address"
+      }
+    ],
+    "name": "TierUpgradeProposed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "oldTier",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "newTier",
+        "type": "uint8"
+      }
+    ],
+    "name": "TierUpgraded",
     "type": "event"
   },
   {
@@ -254,24 +364,56 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "proposalId",
         "type": "uint256"
       },
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "voter",
+        "type": "address"
+      },
+      {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "achievementHash",
-        "type": "bytes32"
+        "internalType": "bool",
+        "name": "support",
+        "type": "bool"
       },
       {
         "indexed": false,
         "internalType": "string",
-        "name": "tier",
+        "name": "reason",
         "type": "string"
       }
     ],
-    "name": "Web2AchievementsUpdated",
+    "name": "VoteCast",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "MIN_VOTES_REQUIRED",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "VOTING_PERIOD",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [
@@ -311,6 +453,45 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "carvIdContract",
+    "outputs": [
+      {
+        "internalType": "contract IModularCarvID",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "deactivateNFT",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "proposalId",
+        "type": "uint256"
+      }
+    ],
+    "name": "executeTierUpgrade",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -333,16 +514,41 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "proposalId",
         "type": "uint256"
       }
     ],
-    "name": "getIdentitiesRoot",
+    "name": "getProposal",
     "outputs": [
       {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "proposedTier",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "votesFor",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "votesAgainst",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "proposalDeadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isExecuted",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -356,7 +562,7 @@
         "type": "address"
       }
     ],
-    "name": "getReputationData",
+    "name": "getReputationByWallet",
     "outputs": [
       {
         "internalType": "uint256",
@@ -364,19 +570,29 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes32",
-        "name": "identitiesRoot",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "contributionScore",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "tier",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "creationDate",
+        "type": "uint256"
       },
       {
         "internalType": "bytes32",
-        "name": "web2AchievementHash",
+        "name": "carvIdHash",
         "type": "bytes32"
       },
       {
-        "internalType": "string",
-        "name": "reputationTier",
-        "type": "string"
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -386,35 +602,21 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "proposalId",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "voter",
+        "type": "address"
       }
     ],
-    "name": "getReputationTier",
+    "name": "hasVotedOnProposal",
     "outputs": [
       {
-        "internalType": "string",
+        "internalType": "bool",
         "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getWeb2AchievementHash",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -447,12 +649,17 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "identitiesRoot",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "contributionScore",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "tier",
+        "type": "uint8"
       }
     ],
-    "name": "mintCarvId",
+    "name": "mintReputationNFT",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -503,10 +710,67 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "proposedTier",
+        "type": "uint8"
+      }
+    ],
+    "name": "proposeTierUpgrade",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "renounceOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "reputations",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "contributionScore",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "tier",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "creationDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "carvIdHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -581,24 +845,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "newRoot",
-        "type": "bytes32"
-      }
-    ],
-    "name": "setIdentitiesRoot",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes4",
         "name": "interfaceId",
         "type": "bytes4"
@@ -623,6 +869,69 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "tier",
+        "type": "uint8"
+      }
+    ],
+    "name": "tierToString",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "tierUpgradeProposals",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum ReputationNFT.Tier",
+        "name": "proposedTier",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "votesFor",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "votesAgainst",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "proposalDeadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isExecuted",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -686,17 +995,53 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "achievementHash",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "_carvIdContract",
+        "type": "address"
+      }
+    ],
+    "name": "updateCarvIdContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newScore",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateContributionScore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "proposalId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "support",
+        "type": "bool"
       },
       {
         "internalType": "string",
-        "name": "tier",
+        "name": "reason",
         "type": "string"
       }
     ],
-    "name": "updateWeb2Achievements",
+    "name": "voteOnTierUpgrade",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -709,7 +1054,7 @@
         "type": "address"
       }
     ],
-    "name": "walletToTokenId",
+    "name": "walletToRepNFT",
     "outputs": [
       {
         "internalType": "uint256",
