@@ -121,7 +121,7 @@ export default function TierUpgradeVoting() {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/voting/0`, {
+      const response = await fetch(`/api/voting/new`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -126,15 +126,18 @@ export async function POST(
 ) {
   try {
     const { proposalId } = params;
-    const proposalIdNum = parseInt(proposalId);
     const body = await request.json();
     const { action, ...actionData } = body;
 
-    if (isNaN(proposalIdNum) || proposalIdNum <= 0) {
-      return NextResponse.json(
-        { error: 'Invalid proposal ID' },
-        { status: 400 }
-      );
+    // For creating proposals, we don't need a valid proposal ID
+    if (action !== 'create') {
+      const proposalIdNum = parseInt(proposalId);
+      if (isNaN(proposalIdNum) || proposalIdNum <= 0) {
+        return NextResponse.json(
+          { error: 'Invalid proposal ID' },
+          { status: 400 }
+        );
+      }
     }
 
     const contractInfo = getContractInfo();
@@ -153,6 +156,7 @@ export async function POST(
 
     switch (action) {
       case 'vote':
+        const proposalIdNum = parseInt(proposalId);
         const { support, reason = '', voterAddress } = actionData;
         
         if (typeof support !== 'boolean') {
@@ -175,7 +179,7 @@ export async function POST(
           transactionData: {
             to: contractInfo.address,
             data: contract.interface.encodeFunctionData('voteOnTierUpgrade', [
-              proposalIdNum,
+              parseInt(proposalId),
               support,
               reason
             ])
@@ -189,7 +193,7 @@ export async function POST(
           transactionData: {
             to: contractInfo.address,
             data: contract.interface.encodeFunctionData('executeTierUpgrade', [
-              proposalIdNum
+              parseInt(proposalId)
             ])
           }
         });
