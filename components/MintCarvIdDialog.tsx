@@ -6,10 +6,9 @@ import { useAccount, useConnect, useDisconnect, useWalletClient } from "wagmi";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
-import ModularCarvID_ABI_JSON from "@/lib/ModularCarvID_ABI.json";
-const ModularCarvID_ABI = ModularCarvID_ABI_JSON.abi;
+import ModularCarvID_ABI from "@/lib/ModularCarvID_ABI.json";
 
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}` || "0x32A1BDa556796E7E62D37cffdAdFe4F06423fC6c" as `0x${string}`;
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}` || "0x59C3fed3153866A139e8efBA185da2BD083fF034" as `0x${string}`;
 const BNB_TESTNET_CHAIN_ID = 97;
 const LOCALHOST_CHAIN_ID = 1337;
 
@@ -91,12 +90,57 @@ export default function MintCarvIdDialog() {
       
       const ethersProvider = new ethers.BrowserProvider(provider);
       const signer = await ethersProvider.getSigner();
+      
+      // Check if contract is deployed
+      const code = await ethersProvider.getCode(CONTRACT_ADDRESS);
+      if (code === '0x') {
+        throw new Error(`Contract not deployed at address ${CONTRACT_ADDRESS}. Please deploy the ModularCarvID contract first using 'cd hardhat && npm run deploy'`);
+      }
+      
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ModularCarvID_ABI, signer);
+      
+      // Check if user already has a CARV ID
+      try {
+        const tokenId = await contract.walletToTokenId(address);
+        if (tokenId && tokenId.toString() !== '0') {
+          throw new Error("You already have a CARV ID minted!");
+        }
+      } catch (err: any) {
+        // If the function doesn't exist or other error, continue with minting
+        if (!err.message.includes("already have a CARV ID")) {
+          console.warn("Could not check existing CARV ID:", err.message);
+        } else {
+          throw err;
+        }
+      }
+      
+      console.log("Minting CARV ID with identity hash:", identityHash);
       const tx = await contract.mintCarvId(identityHash);
-      await tx.wait();
+      console.log("Transaction submitted:", tx.hash);
+      
+      const receipt = await tx.wait();
+      console.log("Transaction confirmed:", receipt);
+      
       setTxHash(tx.hash);
+      
+      // Store Web2 achievements on-chain if available
+      if (web2Achievements && web2Achievements.achievementHash) {
+        try {
+          console.log("Updating Web2 achievements...");
+          const updateTx = await contract.updateWeb2Achievements(
+            web2Achievements.achievementHash,
+            web2Achievements.overallTier || 'Bronze'
+          );
+          await updateTx.wait();
+          console.log("Web2 achievements updated:", updateTx.hash);
+        } catch (updateErr: any) {
+          console.warn("Could not update Web2 achievements:", updateErr.message);
+        }
+      }
+      
     } catch (err: any) {
-      alert(err.message || err);
+      console.error("Minting error:", err);
+      alert(err.message || "Failed to mint CARV ID. Please try again.");
     }
     setLoading(false);
   }

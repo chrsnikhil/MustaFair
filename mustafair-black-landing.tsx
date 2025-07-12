@@ -17,6 +17,7 @@ import {
   Power,
   Zap,
   LogIn,
+  Trophy,
 } from 'lucide-react';
 import { LoginButton } from './components/providers';
 import { OAuthLogin } from './components/oauth-login';
@@ -25,6 +26,7 @@ import MintCarvIdDialog from "@/components/MintCarvIdDialog";
 import { CarvIdPassportDialog } from "@/components/carv-id-viewer";
 import { Web2AchievementViewer } from "@/components/web2-achievement-viewer";
 import { Web2BindingDemo } from "@/components/web2-binding-demo";
+import ContractStatusChecker from "@/components/contract-status-checker";
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
@@ -367,9 +369,61 @@ export default function MustaFairBlackLanding() {
             <div className="max-w-5xl mx-auto">
               <Web2AchievementViewer />
             </div>
+            </motion.div>
+
+          {/* Reputation NFT Section */}
+            <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 2.0, duration: 1 }}
+            className="my-16 md:my-24"
+          >
+            <div className="text-center mb-8">
+              <h2
+                className="text-3xl lg:text-4xl font-black tracking-[0.1em] text-white uppercase"
+                style={{ textShadow: '2px 2px 0px #666' }}
+            >
+                Reputation NFT Governance
+              </h2>
+              <p className="text-[#d1d5db] mt-2 max-w-2xl mx-auto font-mono tracking-wide">
+                MINT ERC-721 REPUTATION TOKENS • COMMUNITY VOTING SYSTEM • TIER UPGRADES
+              </p>
+            </div>
+            <div className="max-w-5xl mx-auto text-center">
+              <Link href="/reputation-nft">
+                <Button className="bg-black text-white font-black font-mono px-12 py-6 border-4 border-white shadow-[12px_12px_0px_0px_#666] hover:shadow-[16px_16px_0px_0px_#666] hover:translate-x-2 hover:translate-y-2 transition-all duration-300 tracking-wider text-lg transform -skew-x-1">
+                  <Trophy className="w-6 h-6 mr-3" />
+                  ACCESS REPUTATION NFT SYSTEM
+              </Button>
+              </Link>
+              <div className="mt-6 grid md:grid-cols-3 gap-4 text-center">
+                <div className="bg-[#1a1a1a] border-2 border-white p-4">
+                  <div className="text-white font-mono font-bold text-lg">ERC-721</div>
+                  <div className="text-[#d1d5db] font-mono text-sm">Standard NFTs</div>
+                </div>
+                <div className="bg-[#1a1a1a] border-2 border-white p-4">
+                  <div className="text-white font-mono font-bold text-lg">VOTING</div>
+                  <div className="text-[#d1d5db] font-mono text-sm">Community Governance</div>
+                </div>
+                <div className="bg-[#1a1a1a] border-2 border-white p-4">
+                  <div className="text-white font-mono font-bold text-lg">TIERS</div>
+                  <div className="text-[#d1d5db] font-mono text-sm">Upgrade System</div>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
         </div>
+
+        {/* Contract Status Section */}
+          <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="mt-16"
+        >
+          <ContractStatusChecker />
+        </motion.div>
 
         {/* Feature Grid */}
         <div className="mt-24">
@@ -458,66 +512,66 @@ export default function MustaFairBlackLanding() {
           </div>
         </div>
 
-        {/* Command Line Interface */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 2.8, duration: 1 }}
-          whileHover={{
-            y: -6,
-            transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
-          }}
+          {/* Command Line Interface */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2.8, duration: 1 }}
+            whileHover={{
+              y: -6,
+              transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
+            }}
           className="mt-24 max-w-4xl mx-auto"
-        >
-          <Card className="bg-black border-4 border-white shadow-[16px_16px_0px_0px_#666] hover:shadow-[20px_20px_0px_0px_#666] transition-all duration-500 ease-out">
-            <CardContent className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <motion.div
-                  animate={{ rotate: [0, 5, -5, 0] }}
+          >
+            <Card className="bg-black border-4 border-white shadow-[16px_16px_0px_0px_#666] hover:shadow-[20px_20px_0px_0px_#666] transition-all duration-500 ease-out">
+              <CardContent className="p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <motion.div
+                    animate={{ rotate: [0, 5, -5, 0] }}
                   transition={{
                     duration: 4,
                     repeat: Number.POSITIVE_INFINITY,
                   }}
-                >
-                  <Wrench className="w-6 h-6 text-white" />
-                </motion.div>
+                  >
+                    <Wrench className="w-6 h-6 text-white" />
+                  </motion.div>
                 <h2 className="text-white font-mono font-black text-2xl tracking-wider">
                   DEPLOY MUSTAFAIR SYSTEM
                 </h2>
-              </div>
+                </div>
 
-              <div className="flex gap-4">
-                <Input
-                  placeholder="npm run deploy --production"
-                  className="bg-black border-3 border-white text-white placeholder:text-[#666] font-mono 
-                             shadow-[4px_4px_0px_0px_#666] focus:shadow-[6px_6px_0px_0px_#666] 
-                             hover:shadow-[5px_5px_0px_0px_#666] transition-all duration-300 ease-out
-                             focus:border-[#d1d5db] focus:outline-none focus:ring-0 flex-1"
-                />
+                <div className="flex gap-4">
+                  <Input
+                    placeholder="npm run deploy --production"
+                    className="bg-black border-3 border-white text-white placeholder:text-[#666] font-mono 
+                               shadow-[4px_4px_0px_0px_#666] focus:shadow-[6px_6px_0px_0px_#666] 
+                               hover:shadow-[5px_5px_0px_0px_#666] transition-all duration-300 ease-out
+                               focus:border-[#d1d5db] focus:outline-none focus:ring-0 flex-1"
+                  />
                 <motion.div
                   whileHover={{ scale: 1.05, rotate: 5 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button
-                    className="bg-black hover:bg-[#1a1a1a] text-white font-mono font-bold px-6 border-3 border-white 
-                               shadow-[4px_4px_0px_0px_#666] hover:shadow-[6px_6px_0px_0px_#666] 
-                               transition-all duration-300 ease-out"
-                  >
-                    <ArrowRight className="w-5 h-5" />
-                  </Button>
-                </motion.div>
-              </div>
+                    <Button
+                      className="bg-black hover:bg-[#1a1a1a] text-white font-mono font-bold px-6 border-3 border-white 
+                                 shadow-[4px_4px_0px_0px_#666] hover:shadow-[6px_6px_0px_0px_#666] 
+                                 transition-all duration-300 ease-out"
+                    >
+                      <ArrowRight className="w-5 h-5" />
+                    </Button>
+                  </motion.div>
+                </div>
 
-              <div className="mt-6 font-mono text-sm text-[#d1d5db] space-y-1">
-                <div>$ npm install @mustafair/black-industrial</div>
-                <div>$ npm run build --mode=production</div>
-                <div>$ npm test --coverage --black</div>
-                <div>$ npm run deploy --env=production</div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+                <div className="mt-6 font-mono text-sm text-[#d1d5db] space-y-1">
+                  <div>$ npm install @mustafair/black-industrial</div>
+                  <div>$ npm run build --mode=production</div>
+                  <div>$ npm test --coverage --black</div>
+                  <div>$ npm run deploy --env=production</div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </div>
-    </div>
   );
 }
