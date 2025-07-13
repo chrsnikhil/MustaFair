@@ -4,16 +4,26 @@ import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { parseEther } from 'viem';
 import CarvIdPostVotingABI from '@/lib/CarvIdPostVoting_ABI.json';
-import ModularCarvIDABI from '@/lib/ModularCarvID_ABI.json';
+import carvIdAbiData from '@/lib/ModularCarvID_ABI.json';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ThumbsUp, ThumbsDown, Clock, User, Tag, Terminal, HardDrive, Cpu, Settings, Shield, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { bscTestnet, localhost } from 'wagmi/chains';
+import { ethers } from 'ethers';
 
 const CONTRACT_ADDRESS = '0x57cDDc41cCF33099D695BEE8A0879da9d57924B9';
-const CARV_ID_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}` || "0x59C3fed3153866A139e8efBA185da2BD083fF034" as `0x${string}`;
+const CARV_ID_CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x59C3fed3153866A139e8efBA185da2BD083fF034") as `0x${string}`;
+const carvIdAbi = carvIdAbiData.abi; // Use just the ABI array
+
+// Debug environment variable
+console.log('🔍 PostVoting - Environment variable check:', {
+  NEXT_PUBLIC_CONTRACT_ADDRESS: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
+  CARV_ID_CONTRACT_ADDRESS,
+  hasEnvVar: !!process.env.NEXT_PUBLIC_CONTRACT_ADDRESS
+});
 
 interface Post {
   id: number;
@@ -32,11 +42,14 @@ interface Post {
 }
 
 export default function PostVoting() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState<{ [key: number]: boolean }>({});
   const [hasCarvId, setHasCarvId] = useState<boolean | null>(null);
+
+  // Check if user is on correct network
+  const isOnCorrectNetwork = chain?.id === bscTestnet.id || chain?.id === localhost.id;
 
   // Contract write for voting
   const { writeContract, data: voteData, isPending: isVoteLoading } = useWriteContract();
@@ -45,24 +58,94 @@ export default function PostVoting() {
     hash: voteData,
   });
 
-  // Check if user has CARV ID
-  const { data: carvIdTokenId, isLoading: isCheckingCarvId } = useReadContract({
+  // Enhanced CARV ID detection using the same logic as carv-id-viewer
+  const { data: carvIdTokenId, isLoading: isCheckingCarvId, error: carvIdError } = useReadContract({
     address: CARV_ID_CONTRACT_ADDRESS,
-    abi: ModularCarvIDABI,
+    abi: carvIdAbi,
     functionName: 'walletToTokenId',
     args: address ? [address] : undefined,
     query: {
-      enabled: isConnected && !!address,
+      enabled: isConnected && isOnCorrectNetwork && !!address,
     },
   });
 
+  // Enhanced debugging for CARV ID detection
+  useEffect(() => {
+    if (isConnected && isOnCorrectNetwork && address) {
+      console.log('🔍 PostVoting CARV ID Detection Debug:', {
+        address,
+        contractAddress: CARV_ID_CONTRACT_ADDRESS,
+        functionName: 'walletToTokenId',
+        args: [address],
+        enabled: isConnected && isOnCorrectNetwork && !!address,
+        network: chain?.id === localhost.id ? 'Localhost' : 'BNB Testnet',
+        chainId: chain?.id,
+        tokenId: carvIdTokenId ? String(carvIdTokenId) : null,
+        hasCarvId: carvIdTokenId !== undefined && carvIdTokenId !== null && Number(carvIdTokenId) > 0,
+        carvIdError
+      });
+      
+      // Check if contract is deployed
+      if (window.ethereum) {
+        const provider = new ethers.BrowserProvider(window.ethereum as any);
+        provider.getCode(CARV_ID_CONTRACT_ADDRESS).then((code: string) => {
+          console.log('📋 PostVoting Contract Deployment Check:', {
+            contractAddress: CARV_ID_CONTRACT_ADDRESS,
+            hasCode: code !== '0x',
+            codeLength: code.length,
+            isDeployed: code !== '0x'
+          });
+        }).catch((error: any) => {
+          console.error('❌ PostVoting Contract deployment check failed:', error);
+        });
+      }
+    }
+  }, [isConnected, isOnCorrectNetwork, address, CARV_ID_CONTRACT_ADDRESS, chain, carvIdTokenId, carvIdError]);
+
+  // ABI validation debugging
+  useEffect(() => {
+    console.log('🔧 PostVoting ABI Validation Debug:', {
+      abiLength: carvIdAbi.length,
+      hasWalletToTokenId: carvIdAbi.some((item: any) => 
+        typeof item === 'object' && item.name === 'walletToTokenId'
+      ),
+      hasTokenURI: carvIdAbi.some((item: any) => 
+        typeof item === 'object' && item.name === 'tokenURI'
+      ),
+      // Show sample of ABI functions
+      abiFunctions: carvIdAbi
+        .filter((item: any) => typeof item === 'object' && item.type === 'function')
+        .slice(0, 10)
+        .map((item: any) => item.name)
+    });
+  }, []);
+
   // Update CARV ID status when token ID is available
   useEffect(() => {
+    console.log('🔍 PostVoting CARV ID detection debug:', {
+      address,
+      contractAddress: CARV_ID_CONTRACT_ADDRESS,
+      chainId: chain?.id,
+      isOnCorrectNetwork,
+      isConnected,
+      carvIdTokenId,
+      carvIdError,
+      hasCarvId: carvIdTokenId !== undefined && carvIdTokenId !== null && Number(carvIdTokenId) > 0,
+      envVar: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS
+    });
+    
     if (carvIdTokenId !== undefined) {
       const hasToken = carvIdTokenId !== null && Number(carvIdTokenId) > 0;
       setHasCarvId(hasToken);
+      console.log('✅ PostVoting CARV ID check:', { 
+        address, 
+        tokenId: carvIdTokenId, 
+        hasToken, 
+        chainId: chain?.id, 
+        isOnCorrectNetwork 
+      });
     }
-  }, [carvIdTokenId]);
+  }, [carvIdTokenId, address, chain, carvIdError]);
 
   useEffect(() => {
     fetchPosts();
@@ -108,7 +191,13 @@ export default function PostVoting() {
       return;
     }
 
-    console.log('Attempting to vote:', { postId, isLike, address, hasCarvId });
+    console.log('🎯 PostVoting - Attempting to vote:', { 
+      postId, 
+      isLike, 
+      address, 
+      hasCarvId,
+      tokenId: carvIdTokenId ? String(carvIdTokenId) : null
+    });
 
     setVoting(prev => ({ ...prev, [postId]: true }));
 
@@ -129,12 +218,12 @@ export default function PostVoting() {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error('Vote validation failed:', data.error);
+        console.error('❌ PostVoting - Vote validation failed:', data.error);
         toast.error(data.error || 'Failed to validate vote');
         return;
       }
 
-      console.log('Vote validation successful:', data);
+      console.log('✅ PostVoting - Vote validation successful:', data);
 
       // If validation passes, execute the on-chain vote
       try {
@@ -144,14 +233,14 @@ export default function PostVoting() {
           functionName: 'voteOnPost',
           args: [BigInt(postId), isLike],
         });
-        console.log('Vote transaction submitted');
+        console.log('🚀 PostVoting - Vote transaction submitted');
       } catch (contractError) {
-        console.error('Contract write error:', contractError);
+        console.error('❌ PostVoting - Contract write error:', contractError);
         toast.error('Failed to submit vote transaction');
       }
 
     } catch (error) {
-      console.error('Error voting:', error);
+      console.error('❌ PostVoting - Error voting:', error);
       toast.error('Failed to vote');
     } finally {
       setVoting(prev => ({ ...prev, [postId]: false }));
@@ -243,6 +332,13 @@ export default function PostVoting() {
                 <div className="flex items-center justify-center gap-4 transform skew-x-1">
                   <AlertTriangle className="w-6 h-6 text-yellow-400" />
                   <span className="font-black font-mono text-white tracking-[0.2em] text-lg">CONNECT WALLET TO VOTE</span>
+                </div>
+              </div>
+            ) : !isOnCorrectNetwork ? (
+              <div className="bg-black border-4 border-yellow-500 shadow-[8px_8px_0px_0px_#666] transform -skew-x-1 p-6">
+                <div className="flex items-center justify-center gap-4 transform skew-x-1">
+                  <AlertTriangle className="w-6 h-6 text-yellow-400" />
+                  <span className="font-black font-mono text-yellow-400 tracking-[0.2em] text-lg">SWITCH TO BNB TESTNET/LOCALHOST</span>
                 </div>
               </div>
             ) : isCheckingCarvId ? (
@@ -341,29 +437,29 @@ export default function PostVoting() {
                         <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}>
                           <Button
                             className={`font-black font-mono px-6 py-3 border-4 transition-all duration-300 tracking-wider transform -skew-x-1 flex-1 ${
-                              hasCarvId && isConnected
+                              hasCarvId && isConnected && isOnCorrectNetwork
                                 ? 'bg-white hover:bg-[#e8e8e8] text-black border-white shadow-[6px_6px_0px_0px_#666] hover:shadow-[8px_8px_0px_0px_#666]'
                                 : 'bg-[#666] text-[#999] border-[#666] cursor-not-allowed'
                             }`}
                             onClick={() => handleVote(post.id, true)}
-                            disabled={voting[post.id] || isVoteLoading || !hasCarvId || !isConnected}
+                            disabled={voting[post.id] || isVoteLoading || !hasCarvId || !isConnected || !isOnCorrectNetwork}
                           >
                             <ThumbsUp className="w-4 h-4 mr-2" />
-                            {!isConnected ? 'CONNECT WALLET' : !hasCarvId ? 'NEED CARV ID' : 'LIKE'}
+                            {!isConnected ? 'CONNECT WALLET' : !isOnCorrectNetwork ? 'WRONG NETWORK' : !hasCarvId ? 'NEED CARV ID' : 'LIKE'}
                           </Button>
                         </motion.div>
                         <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}>
                           <Button
                             className={`font-black font-mono px-6 py-3 border-4 transition-all duration-300 tracking-wider transform skew-x-1 flex-1 ${
-                              hasCarvId && isConnected
+                              hasCarvId && isConnected && isOnCorrectNetwork
                                 ? 'bg-black border-white text-white hover:bg-[#1a1a1a] shadow-[6px_6px_0px_0px_#666] hover:shadow-[8px_8px_0px_0px_#666]'
                                 : 'bg-[#666] text-[#999] border-[#666] cursor-not-allowed'
                             }`}
                             onClick={() => handleVote(post.id, false)}
-                            disabled={voting[post.id] || isVoteLoading || !hasCarvId || !isConnected}
+                            disabled={voting[post.id] || isVoteLoading || !hasCarvId || !isConnected || !isOnCorrectNetwork}
                           >
                             <ThumbsDown className="w-4 h-4 mr-2" />
-                            {!isConnected ? 'CONNECT WALLET' : !hasCarvId ? 'NEED CARV ID' : 'DISLIKE'}
+                            {!isConnected ? 'CONNECT WALLET' : !isOnCorrectNetwork ? 'WRONG NETWORK' : !hasCarvId ? 'NEED CARV ID' : 'DISLIKE'}
                           </Button>
                         </motion.div>
                       </div>

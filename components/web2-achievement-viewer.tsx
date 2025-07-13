@@ -7,17 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import {
+  Trophy,
   Github,
   Mail,
-  Star,
   GitBranch,
+  Star,
   Calendar,
-  HardDrive,
-  Trophy,
   Zap,
   RefreshCw,
-  ExternalLink
+  Clock,
 } from "lucide-react";
+import { useWeb2Achievements } from '@/hooks/use-web2-achievements';
 
 interface Web2AchievementData {
   totalScore: number;
@@ -46,85 +46,19 @@ const tierColors = {
   Bronze: 'bg-amber-600 text-white',
   Silver: 'bg-gray-400 text-black',
   Gold: 'bg-yellow-500 text-black',
-  Platinum: 'bg-purple-600 text-white'
+  Platinum: 'bg-purple-600 text-white',
 };
 
 const tierShadows = {
-  Bronze: 'shadow-[8px_8px_0px_0px_#d97706]',
-  Silver: 'shadow-[8px_8px_0px_0px_#9ca3af]',
-  Gold: 'shadow-[8px_8px_0px_0px_#eab308]',
-  Platinum: 'shadow-[8px_8px_0px_0px_#7c3aed]'
+  Bronze: 'shadow-[4px_4px_0px_0px_#92400e]',
+  Silver: 'shadow-[4px_4px_0px_0px_#6b7280]',
+  Gold: 'shadow-[4px_4px_0px_0px_#d97706]',
+  Platinum: 'shadow-[4px_4px_0px_0px_#7c3aed]',
 };
 
 export function Web2AchievementViewer() {
   const { data: session } = useSession();
-  const [achievements, setAchievements] = useState<Web2AchievementData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchAchievements = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // If logged in with CARV ID, extract Web2 achievements from session
-      if (session?.provider === 'carv-id' && (session as any).web2Achievements) {
-        try {
-          const web2Data = typeof (session as any).web2Achievements === 'string' 
-            ? JSON.parse((session as any).web2Achievements)
-            : (session as any).web2Achievements;
-          
-          if (web2Data) {
-            setAchievements(web2Data);
-            setLoading(false);
-            return;
-          }
-        } catch (parseError) {
-          console.warn('Failed to parse CARV ID Web2 achievements:', parseError);
-        }
-      }
-
-      // Fallback to traditional OAuth provider logic
-      if (!session?.username || !session?.provider) return;
-
-      const identities = [];
-      
-      if (session.provider === 'github') {
-        identities.push({ provider: 'github', username: session.username });
-      } else if (session.provider === 'google' && session.user?.email) {
-        identities.push({ provider: 'google', email: session.user.email });
-      }
-
-      if (identities.length === 0) {
-        setError('No Web2 identities found');
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch('/api/web2/achievements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identities })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch achievements');
-      }
-
-      const data = await response.json();
-      setAchievements(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (session && (session.username || session.provider === 'carv-id')) {
-      fetchAchievements();
-    }
-  }, [session]);
+  const { achievements, loading, error, fetchAchievements, lastFetched } = useWeb2Achievements();
 
   if (!session) {
     return (
@@ -153,6 +87,16 @@ export function Web2AchievementViewer() {
             WEB2 ACHIEVEMENTS
           </CardTitle>
           <div className="flex gap-4 items-center">
+            {!achievements ? (
+              <Button
+                onClick={fetchAchievements}
+                disabled={loading}
+                className="bg-white text-black font-black font-mono px-6 py-3 border-4 border-white shadow-[6px_6px_0px_0px_#666] hover:shadow-[8px_8px_0px_0px_#666] hover:translate-x-1 hover:translate-y-1 transition-all duration-300 transform -skew-x-1"
+              >
+                {loading ? <RefreshCw className="w-5 h-5 animate-spin mr-2" /> : <Github className="w-5 h-5 mr-2" />}
+                {loading ? 'FETCHING GITHUB DATA...' : 'GET GITHUB DATA'}
+              </Button>
+            ) : (
             <Button
               onClick={fetchAchievements}
               disabled={loading}
@@ -161,6 +105,7 @@ export function Web2AchievementViewer() {
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               {loading ? 'FETCHING...' : 'REFRESH'}
             </Button>
+            )}
             {achievements && (
               <>
                 <Badge className={`${tierColors[achievements.overallTier]} font-mono font-bold px-4 py-2 text-lg border-2 border-white ${tierShadows[achievements.overallTier]}`}>
@@ -172,6 +117,12 @@ export function Web2AchievementViewer() {
                   </Badge>
                 )}
               </>
+            )}
+            {lastFetched && (
+              <div className="flex items-center gap-2 text-[#d1d5db] font-mono text-xs">
+                <Clock className="w-3 h-3" />
+                {new Date(lastFetched).toLocaleTimeString()}
+              </div>
             )}
           </div>
         </CardHeader>
@@ -187,6 +138,19 @@ export function Web2AchievementViewer() {
             <div className="text-center py-8">
               <RefreshCw className="w-8 h-8 text-white animate-spin mx-auto mb-4" />
               <p className="text-white font-mono">ANALYZING WEB2 ACTIVITIES...</p>
+            </div>
+          )}
+
+          {!achievements && !loading && (
+            <div className="text-center py-12">
+              <Github className="w-16 h-16 text-[#d1d5db] mx-auto mb-4" />
+              <h3 className="text-white font-mono font-black text-lg mb-2">NO GITHUB DATA LOADED</h3>
+              <p className="text-[#d1d5db] font-mono text-sm mb-6">
+                Click "GET GITHUB DATA" to analyze your GitHub contributions and achievements
+              </p>
+              <div className="text-xs text-[#999] font-mono">
+                This will fetch your commits, repositories, and calculate your achievement score
+              </div>
             </div>
           )}
 
@@ -312,7 +276,7 @@ export function Web2AchievementViewer() {
                 className="bg-[#1a1a1a] border-2 border-[#d1d5db] p-4 rounded"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <HardDrive className="w-5 h-5 text-[#d1d5db]" />
+                  <Clock className="w-5 h-5 text-[#d1d5db]" />
                   <span className="text-white font-mono font-bold">ON-CHAIN HASH:</span>
                 </div>
                 <div className="font-mono text-sm text-[#d1d5db] break-all bg-black p-2 border border-white">
@@ -331,7 +295,7 @@ export function Web2AchievementViewer() {
                 className="bg-[#d1d5db] text-black p-4 font-mono text-sm border-4 border-white shadow-[8px_8px_0px_0px_#666]"
               >
                 <div className="flex items-center gap-2 font-bold mb-2">
-                  <ExternalLink className="w-4 h-4" />
+                  <Clock className="w-4 h-4" />
                   CARV ID INTEGRATION
                 </div>
                 <p>

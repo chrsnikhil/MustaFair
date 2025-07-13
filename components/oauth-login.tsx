@@ -110,7 +110,7 @@ export function OAuthLogin({
     return (
       <Button
         onClick={() => signIn()}
-        className="bg-black text-white font-mono px-4 py-2 border-2 border-white shadow-[3px_3px_0px_0px_#666] hover:shadow-[5px_5px_0px_0px_#666] transition-all duration-300 rounded-none text-xs tracking-widest"
+        className="bg-black text-white font-mono px-4 py-2 border-2 border-white shadow-[3px_3px_0px_0px_#666] hover:shadow-[6px_6px_0px_0px_#666] hover:translate-x-1 hover:translate-y-1 hover:text-black transition-all duration-300 rounded-none text-xs tracking-widest transform -skew-x-1"
       >
         <User className="w-4 h-4 mr-2" />
         CONNECT IDENTITY

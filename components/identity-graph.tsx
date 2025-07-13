@@ -445,7 +445,7 @@ export function IdentityGraph() {
             VISUALIZING MODULAR IDENTITY CONNECTIONS • ERC-7231 COMPLIANT
           </p>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           {/* Graph Visualization */}
           <div className="relative">
             <motion.div
@@ -462,12 +462,15 @@ export function IdentityGraph() {
               />
             </motion.div>
 
-            {/* Status Overlay */}
-            <div className="absolute top-4 right-4 space-y-2">
-              <Badge className="bg-white text-black font-mono text-xs px-2 py-1 border border-white shadow-[2px_2px_0px_0px_#666]">
+            {/* Status Overlay - Improved Layout */}
+            <div className="absolute top-4 left-4 space-y-2">
+              <Badge className="bg-white text-black font-mono text-xs px-3 py-1 border-2 border-white shadow-[3px_3px_0px_0px_#666] transform -skew-x-1">
                 LIVE NETWORK
               </Badge>
-              <Badge className="bg-black text-white font-mono text-xs px-2 py-1 border border-white shadow-[2px_2px_0px_0px_#666]">
+            </div>
+            
+            <div className="absolute top-4 right-4">
+              <Badge className="bg-black text-white font-mono text-xs px-3 py-1 border-2 border-white shadow-[3px_3px_0px_0px_#666] transform -skew-x-1">
                 {nodes.filter((n) => n.status === 'connected').length}/{nodes.length} LINKED
               </Badge>
             </div>
@@ -513,6 +516,10 @@ export function IdentityGraph() {
           )}
 
           {/* Connection Status Grid */}
+          <div className="space-y-4">
+            <h4 className="text-white font-mono font-black text-sm tracking-wider border-b-2 border-white pb-2">
+              IDENTITY COMPONENTS
+            </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {nodes.map((node, index) => (
               <motion.div
@@ -535,6 +542,7 @@ export function IdentityGraph() {
                 </p>
               </motion.div>
             ))}
+            </div>
           </div>
 
           {/* System Information */}

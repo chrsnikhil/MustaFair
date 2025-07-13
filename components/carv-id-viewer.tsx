@@ -11,10 +11,19 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, X } from "lucide-react";
 import carvIdAbiData from "@/lib/ModularCarvID_ABI.json";
 import { bscTestnet, localhost } from "wagmi/chains";
+import { useWeb2Achievements } from "@/hooks/use-web2-achievements";
+import { ethers } from "ethers";
 
 // Ensure the contract address is properly typed
 const contractAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x59C3fed3153866A139e8efBA185da2BD083fF034") as `0x${string}`;
-const carvIdAbi = carvIdAbiData;
+const carvIdAbi = carvIdAbiData.abi; // Use just the ABI array
+
+// Debug environment variable
+console.log('🔍 CarvIdPassportDialog - Environment variable check:', {
+  NEXT_PUBLIC_CONTRACT_ADDRESS: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
+  contractAddress,
+  hasEnvVar: !!process.env.NEXT_PUBLIC_CONTRACT_ADDRESS
+});
 
 interface NftMetadata {
   name: string;
@@ -34,6 +43,7 @@ export function CarvIdPassportDialog() {
   const [web2Loading, setWeb2Loading] = useState(false);
   const [web2Error, setWeb2Error] = useState<string | null>(null);
   const [trustScore, setTrustScore] = useState<{ value: number; badge: string; explanation: string } | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   const isOnCorrectNetwork = chain?.id === bscTestnet.id || chain?.id === localhost.id;
 
@@ -50,6 +60,57 @@ export function CarvIdPassportDialog() {
   // Check if user has a token - fix the logic to handle BigInt properly
   const hasToken = tokenId !== undefined && tokenId !== null && Number(tokenId) > 0;
 
+  // Enhanced debugging for CARV ID detection
+  useEffect(() => {
+    if (isConnected && isOnCorrectNetwork && address) {
+      console.log('🔍 CARV ID Detection Debug:', {
+        address,
+        contractAddress,
+        functionName: 'walletToTokenId',
+        args: [address],
+        enabled: isConnected && isOnCorrectNetwork && !!address,
+        network: chain?.id === localhost.id ? 'Localhost' : 'BNB Testnet',
+        chainId: chain?.id,
+        tokenId: tokenId ? String(tokenId) : null,
+        hasToken,
+        tokenIdError
+      });
+      
+      // Check if contract is deployed
+      if (window.ethereum) {
+        const provider = new ethers.BrowserProvider(window.ethereum as any);
+        provider.getCode(contractAddress).then((code: string) => {
+          console.log('📋 Contract Deployment Check:', {
+            contractAddress,
+            hasCode: code !== '0x',
+            codeLength: code.length,
+            isDeployed: code !== '0x'
+          });
+        }).catch((error: any) => {
+          console.error('❌ Contract deployment check failed:', error);
+        });
+      }
+    }
+  }, [isConnected, isOnCorrectNetwork, address, contractAddress, chain, tokenId, hasToken, tokenIdError]);
+
+  // ABI validation debugging
+  useEffect(() => {
+    console.log('🔧 ABI Validation Debug:', {
+      abiLength: carvIdAbi.length,
+      hasWalletToTokenId: carvIdAbi.some((item: any) => 
+        typeof item === 'object' && item.name === 'walletToTokenId'
+      ),
+      hasTokenURI: carvIdAbi.some((item: any) => 
+        typeof item === 'object' && item.name === 'tokenURI'
+      ),
+      // Show sample of ABI functions
+      abiFunctions: carvIdAbi
+        .filter((item: any) => typeof item === 'object' && item.type === 'function')
+        .slice(0, 10)
+        .map((item: any) => item.name)
+    });
+  }, []);
+
   const { data: tokenURI, error: tokenURIError, isFetching: isFetchingTokenURI } = useReadContract({
     address: contractAddress,
     abi: carvIdAbi,
@@ -60,9 +121,15 @@ export function CarvIdPassportDialog() {
     },
   });
 
+  // Set client flag to prevent hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   useEffect(() => {
     const anyError = tokenIdError || tokenURIError;
     if (anyError) {
+      console.error('❌ CARV ID Error:', anyError);
       setError(String(anyError.message));
       setIsLoading(false);
       return;
@@ -75,10 +142,12 @@ export function CarvIdPassportDialog() {
           const jsonString = atob(base64String);
           const parsedMetadata = JSON.parse(jsonString);
           setMetadata(parsedMetadata);
+          console.log('✅ CARV ID Metadata loaded:', parsedMetadata);
         } else {
           setError("Unsupported token URI format.");
         }
       } catch (e) {
+        console.error('❌ Failed to parse token URI:', e);
         setError(String(e));
       }
     }
@@ -170,8 +239,11 @@ export function CarvIdPassportDialog() {
   // Button is only enabled if user is connected and has a CARV ID
   const canView = isConnected && isOnCorrectNetwork && hasToken;
 
-  // Get button text and tooltip based on state
+  // Get button text and tooltip based on state - only on client side
   const getButtonState = () => {
+    if (!isClient) {
+      return { text: "Loading...", disabled: true };
+    }
     if (!isConnected) {
       return { text: "Connect Wallet First", disabled: true };
     }
@@ -185,6 +257,18 @@ export function CarvIdPassportDialog() {
   };
 
   const buttonState = getButtonState();
+
+  // Don't render the button until client-side hydration is complete
+  if (!isClient) {
+    return (
+      <Button
+        className="bg-black text-white font-black font-mono px-6 py-2 border-4 border-white shadow-[6px_6px_0px_0px_#666] hover:shadow-[6px_6px_0px_0px_#666] hover:translate-x-1 hover:translate-y-1 hover:text-black transition-all duration-300 tracking-wider text-base transform -skew-x-1"
+        disabled={true}
+      >
+        Loading...
+      </Button>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

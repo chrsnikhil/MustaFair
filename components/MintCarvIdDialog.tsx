@@ -1,16 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { keccak_256 } from "js-sha3";
 import { useAccount, useConnect, useDisconnect, useWalletClient } from "wagmi";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { Shield, AlertTriangle, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import ModularCarvID_ABI from "@/lib/ModularCarvID_ABI.json";
+import { useWeb2Achievements } from "@/hooks/use-web2-achievements";
 
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}` || "0x59C3fed3153866A139e8efBA185da2BD083fF034" as `0x${string}`;
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 const BNB_TESTNET_CHAIN_ID = 97;
 const LOCALHOST_CHAIN_ID = 1337;
+
+// Ensure ABI is properly extracted as an array
+const carvIdAbi = Array.isArray(ModularCarvID_ABI) ? ModularCarvID_ABI : ModularCarvID_ABI.abi;
+
+// Debug ABI structure
+console.log('🔧 MintCarvIdDialog ABI Debug:', {
+  isArray: Array.isArray(ModularCarvID_ABI),
+  hasAbi: 'abi' in ModularCarvID_ABI,
+  abiType: typeof carvIdAbi,
+  abiLength: Array.isArray(carvIdAbi) ? carvIdAbi.length : 'not array'
+});
 
 export default function MintCarvIdDialog() {
   const { data: session, status } = useSession();
@@ -21,6 +35,13 @@ export default function MintCarvIdDialog() {
   const [txHash, setTxHash] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const { achievements: web2Achievements } = useWeb2Achievements();
+
+  // Ensure client-side rendering to prevent hydration issues
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   function getIdentityHash(user: any, wallet: string, web2Achievements?: any) {
     const identityData = {
@@ -42,47 +63,68 @@ export default function MintCarvIdDialog() {
     return "0x" + keccak_256(JSON.stringify(identityData));
   }
 
-  async function fetchWeb2Achievements(user: any) {
-    try {
-      const identities = [];
-      
-      // Add GitHub identity if user logged in with GitHub
-      if (user.provider === 'github' && session?.username) {
-        identities.push({ provider: 'github', username: session.username });
-      }
-      
-      // Add Google identity if user logged in with Google
-      if (user.provider === 'google' && user.email) {
-        identities.push({ provider: 'google', email: user.email });
-      }
-
-      if (identities.length === 0) return null;
-
-      const response = await fetch('/api/web2/achievements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identities })
-      });
-
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (error) {
-      console.warn('Failed to fetch Web2 achievements:', error);
-    }
-    return null;
-  }
-
   async function handleMint(user: any) {
-    if (!walletClient) return alert("Wallet not connected");
-    if (chainId !== BNB_TESTNET_CHAIN_ID && chainId !== LOCALHOST_CHAIN_ID) {
-      return alert("Please switch to BNB Testnet or Localhost");
+    if (!isClient) return; // Prevent execution during SSR
+
+    if (!walletClient) {
+      toast.error("WALLET NOT CONNECTED", {
+        description: "Please connect your wallet to mint CARV ID",
+        icon: <XCircle className="w-5 h-5" />,
+        style: {
+          background: '#000',
+          border: '4px solid #fff',
+          color: '#fff',
+          fontFamily: 'monospace',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+        },
+        className: "font-mono tracking-wider",
+      });
+      return;
     }
+    
+    if (chainId !== BNB_TESTNET_CHAIN_ID && chainId !== LOCALHOST_CHAIN_ID) {
+      toast.error("WRONG NETWORK", {
+        description: "Please switch to BNB Testnet or Localhost",
+        icon: <AlertTriangle className="w-5 h-5" />,
+        style: {
+          background: '#000',
+          border: '4px solid #fff',
+          color: '#fff',
+          fontFamily: 'monospace',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+        },
+        className: "font-mono tracking-wider",
+      });
+      return;
+    }
+    
     setLoading(true);
+    
+    // Show loading toast
+    const loadingToast = toast.loading("MINTING CARV ID...", {
+      description: "Processing transaction on blockchain",
+      icon: <Loader2 className="w-5 h-5 animate-spin" />,
+      style: {
+        background: '#000',
+        border: '4px solid #fff',
+        color: '#fff',
+        fontFamily: 'monospace',
+        fontWeight: 'bold',
+        fontSize: '14px',
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em',
+      },
+      className: "font-mono tracking-wider",
+    });
+    
     try {
       // Fetch Web2 achievements before minting
-      const web2Achievements = await fetchWeb2Achievements(user);
-      
       const identityHash = getIdentityHash(user, address!, web2Achievements);
       const { ethers } = await import("ethers");
       const provider = (window as any).ethereum;
@@ -97,7 +139,7 @@ export default function MintCarvIdDialog() {
         throw new Error(`Contract not deployed at address ${CONTRACT_ADDRESS}. Please deploy the ModularCarvID contract first using 'cd hardhat && npm run deploy'`);
       }
       
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ModularCarvID_ABI, signer);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, carvIdAbi, signer);
       
       // Check if user already has a CARV ID
       try {
@@ -123,6 +165,25 @@ export default function MintCarvIdDialog() {
       
       setTxHash(tx.hash);
       
+      // Dismiss loading toast and show success
+      toast.dismiss(loadingToast);
+      toast.success("CARV ID MINTED SUCCESSFULLY!", {
+        description: `Transaction: ${tx.hash.slice(0, 10)}...${tx.hash.slice(-8)}`,
+        icon: <CheckCircle className="w-5 h-5" />,
+        style: {
+          background: '#000',
+          border: '4px solid #fff',
+          color: '#fff',
+          fontFamily: 'monospace',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+        },
+        className: "font-mono tracking-wider",
+        duration: 5000,
+      });
+      
       // Store Web2 achievements on-chain if available
       if (web2Achievements && web2Achievements.achievementHash) {
         try {
@@ -133,14 +194,63 @@ export default function MintCarvIdDialog() {
           );
           await updateTx.wait();
           console.log("Web2 achievements updated:", updateTx.hash);
+          
+          toast.success("WEB2 ACHIEVEMENTS UPDATED", {
+            description: "Your achievements have been bound to your CARV ID",
+            icon: <Shield className="w-5 h-5" />,
+            style: {
+              background: '#000',
+              border: '4px solid #fff',
+              color: '#fff',
+              fontFamily: 'monospace',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+            },
+            className: "font-mono tracking-wider",
+          });
         } catch (updateErr: any) {
           console.warn("Could not update Web2 achievements:", updateErr.message);
+          toast.error("WEB2 UPDATE FAILED", {
+            description: "Achievements could not be updated, but CARV ID was minted",
+            icon: <AlertTriangle className="w-5 h-5" />,
+            style: {
+              background: '#000',
+              border: '4px solid #fff',
+              color: '#fff',
+              fontFamily: 'monospace',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+            },
+            className: "font-mono tracking-wider",
+          });
         }
       }
       
     } catch (err: any) {
       console.error("Minting error:", err);
-      alert(err.message || "Failed to mint CARV ID. Please try again.");
+      
+      // Dismiss loading toast and show error
+      toast.dismiss(loadingToast);
+      toast.error("MINTING FAILED", {
+        description: err.message || "Failed to mint CARV ID. Please try again.",
+        icon: <XCircle className="w-5 h-5" />,
+        style: {
+          background: '#000',
+          border: '4px solid #fff',
+          color: '#fff',
+          fontFamily: 'monospace',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+        },
+        className: "font-mono tracking-wider",
+        duration: 5000,
+      });
     }
     setLoading(false);
   }
@@ -155,10 +265,22 @@ export default function MintCarvIdDialog() {
       }
     : null;
 
+  // Don't render until client-side hydration is complete
+  if (!isClient) {
+    return (
+      <Button 
+        className="bg-black text-white font-black font-mono px-8 py-4 border-4 border-black shadow-[8px_8px_0px_0px_#666] hover:shadow-[6px_6px_0px_0px_#666] hover:translate-x-1 hover:translate-y-1 transition-all duration-300 tracking-wider"
+        disabled={true}
+      >
+        Loading...
+      </Button>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-black text-white font-black font-mono px-8 py-4 border-4 border-black shadow-[8px_8px_0px_0px_#666] hover:shadow-[6px_6px_0px_0px_#666] hover:translate-x-1 hover:translate-y-1 transition-all duration-300 tracking-wider">
+        <Button className="bg-black text-white font-black font-mono px-8 py-4 border-2 border-white shadow-[8px_8px_0px_0px_#666] hover:shadow-[6px_6px_0px_0px_#666] hover:translate-x-1 hover:translate-y-1 transition-all duration-300 tracking-wider transform -skew-x-1">
           Mint Modular CARV ID
         </Button>
       </DialogTrigger>
@@ -220,7 +342,7 @@ export default function MintCarvIdDialog() {
                   </a>
                 </div>
               )}
-              <Button variant="outline" onClick={() => disconnect()} className="w-full font-mono font-bold border-4 border-black">
+              <Button variant="outline" onClick={() => disconnect()} className="w-full font-mono font-bold border-4 border-black transform -skew-x-1 hover:text-black transition-all duration-300">
                 Disconnect Wallet
               </Button>
             </>

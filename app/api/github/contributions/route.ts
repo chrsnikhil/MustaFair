@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '../../auth/[...nextauth]/route';
+
+// Simple in-memory cache for GitHub data (in production, use Redis or similar)
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 interface GitHubContribution {
   repository: string;
@@ -46,6 +51,10 @@ async function fetchGitHubContributions(username: string, token?: string): Promi
     const userResponse = await fetch(`https://api.github.com/users/${username}`, { headers });
     
     if (!userResponse.ok) {
+      if (userResponse.status === 403) {
+        console.log('GitHub API rate limit hit, returning mock data');
+        throw new Error('Rate limit exceeded');
+      }
       throw new Error(`GitHub API error: ${userResponse.status} ${userResponse.statusText}`);
     }
     
@@ -60,6 +69,10 @@ async function fetchGitHubContributions(username: string, token?: string): Promi
     const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`, { headers });
     
     if (!reposResponse.ok) {
+      if (reposResponse.status === 403) {
+        console.log('GitHub API rate limit hit, returning mock data');
+        throw new Error('Rate limit exceeded');
+      }
       throw new Error(`GitHub API error: ${reposResponse.status} ${reposResponse.statusText}`);
     }
     
@@ -78,7 +91,7 @@ async function fetchGitHubContributions(username: string, token?: string): Promi
     let totalIssues = 0;
     const languages = new Set<string>();
 
-    for (const repo of reposData.slice(0, 10)) { // Limit to top 10 repos to avoid API limits
+    for (const repo of reposData.slice(0, 5)) { // Limit to top 5 repos to avoid API limits
       if (repo.owner.login === username) {
         try {
           // Fetch commits count
@@ -146,6 +159,9 @@ async function fetchGitHubContributions(username: string, token?: string): Promi
         } catch (error) {
           console.warn(`Failed to fetch data for repo ${repo.name}:`, error);
         }
+        
+        // Add small delay between API calls to be respectful to rate limits
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
 
@@ -323,10 +339,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Get session to check if user has GitHub token
-    const session = await getServerSession();
-    const token = session?.accessToken; // You'd need to store this in the session
+    const session = await getServerSession(authOptions);
+    const token = session?.accessToken;
+
+    // Check cache first
+    const cacheKey = `${username}-${!!token}`;
+    const cached = cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      console.log('Returning cached GitHub data for:', username);
+      return NextResponse.json(cached.data);
+    }
 
     const achievements = await fetchGitHubContributions(username, token);
+    
+    // Cache the result
+    cache.set(cacheKey, { data: achievements, timestamp: Date.now() });
     
     console.log('Successfully fetched GitHub achievements for:', username);
     return NextResponse.json(achievements);

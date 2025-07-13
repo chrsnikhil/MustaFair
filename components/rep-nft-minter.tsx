@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Trophy, Star, Crown, Award } from 'lucide-react';
+import { Loader2, Award, Trophy, Vote, Shield, Link as LinkIcon, Users2, TrendingUp, Target } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ReputationData {
@@ -24,49 +24,47 @@ interface ReputationData {
 }
 
 const tierIcons = {
-  Bronze: Award,
-  Silver: Star,
+  Bronze: Trophy,
+  Silver: Award,
   Gold: Trophy,
-  Platinum: Crown
+  Platinum: Award
 };
 
 const tierColors = {
   Bronze: 'bg-amber-600',
   Silver: 'bg-gray-400',
   Gold: 'bg-yellow-500',
-  Platinum: 'bg-purple-500'
+  Platinum: 'bg-cyan-400'
 };
 
 export default function RepNFTMinter() {
   const { address, isConnected } = useAccount();
-  const [contributionScore, setContributionScore] = useState<number>(100);
-  const [selectedTier, setSelectedTier] = useState<string>('Bronze');
   const [reputationData, setReputationData] = useState<ReputationData | null>(null);
+  const [fetchingData, setFetchingData] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [fetchingData, setFetchingData] = useState(false);
+  const [contributionScore, setContributionScore] = useState(750);
+  const [selectedTier, setSelectedTier] = useState('Silver');
 
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
 
-  // Fetch existing reputation data
   const fetchReputationData = async () => {
-    if (!address) return;
+    if (!address) {
+      setFetchingData(false);
+      return;
+    }
     
-    setFetchingData(true);
     try {
       const response = await fetch(`/api/reputation-nft/${address}`);
       const result = await response.json();
       
       if (result.success && result.data) {
         setReputationData(result.data);
-      } else {
-        setReputationData(null);
       }
     } catch (error) {
       console.error('Error fetching reputation data:', error);
-      toast.error('Failed to fetch reputation data');
     } finally {
       setFetchingData(false);
     }
@@ -75,13 +73,15 @@ export default function RepNFTMinter() {
   useEffect(() => {
     if (isConnected && address) {
       fetchReputationData();
+    } else {
+      setFetchingData(false);
     }
   }, [address, isConnected]);
 
   useEffect(() => {
     if (isSuccess) {
       toast.success('Reputation NFT minted successfully!');
-      fetchReputationData(); // Refresh data
+      fetchReputationData();
     }
   }, [isSuccess]);
 
@@ -93,12 +93,9 @@ export default function RepNFTMinter() {
 
     setLoading(true);
     try {
-      // Get transaction data from API
       const response = await fetch(`/api/reputation-nft/${address}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'mint',
           contributionScore,

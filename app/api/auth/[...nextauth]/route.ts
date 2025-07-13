@@ -4,7 +4,7 @@ import GitHubProvider from 'next-auth/providers/github';
 import { createHash } from 'crypto';
 import { CarvIdProvider } from '@/lib/carv-id-provider';
 
-const handler = NextAuth({
+export const authOptions = {
   providers: [
     CarvIdProvider,
     GoogleProvider({
@@ -27,7 +27,7 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile, user }) {
+    async jwt({ token, account, profile, user }: any) {
       // Handle CARV ID authentication
       if (user && account?.provider === 'carv-id') {
         token.identityHash = (user as any).identityHash;
@@ -78,7 +78,7 @@ const handler = NextAuth({
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       // Add identity hash and data to session
       session.identityHash = token.identityHash as string;
       session.identityData = token.identityData as any;
@@ -101,6 +101,8 @@ const handler = NextAuth({
     signIn: '/auth/signin',
   },
   secret: process.env.NEXTAUTH_SECRET,
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

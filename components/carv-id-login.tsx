@@ -10,7 +10,7 @@ import { Loader2, LogIn, LogOut, Shield, User } from "lucide-react";
 import carvIdAbiData from "@/lib/ModularCarvID_ABI.json";
 import { bscTestnet, localhost } from "wagmi/chains";
 
-const contractAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x59C3fed3153866A139e8efBA185da2BD083fF034") as `0x${string}`;
+const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 const carvIdAbi = carvIdAbiData;
 
 interface CarvIdProfile {
