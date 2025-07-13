@@ -1,6 +1,6 @@
 {
   "name": "mustafair-carvid",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CARV ID implementation files for MustaFair decentralized social media platform",
   "files": [
     "components/",
@@ -25,4 +25,4 @@
   ],
   "author": "MustaFair Team",
   "license": "MIT"
-} 
+}
