@@ -1,6 +1,6 @@
 {
-  "name": "mustafair-carvid",
-  "version": "1.0.5",
+  "name": "mustafair-carvid-package-hackathon",
+  "version": "1.0.0",
   "description": "CARV ID implementation files for MustaFair decentralized social media platform",
   "files": [
     "components/",
