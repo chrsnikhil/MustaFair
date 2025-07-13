@@ -1,6 +1,6 @@
 {
   "name": "mustafair-carvid",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "CARV ID implementation files for MustaFair decentralized social media platform",
   "files": [
     "components/",
@@ -8,10 +8,13 @@
     "artifacts/",
     "lib/",
     "hooks/",
-    "README.md"
+    "README.md",
+    "test-script.js"
   ],
   "scripts": {
-    "postinstall": "node -e \"console.log('\\n\\n                                                                                                                                                                              \\n                                                                                                                                                                              \\n  MMMMMMMM               MMMMMMMM                                            tttt                               ffffffffffffffff                    iiii                     \\n  M:::::::M             M:::::::M                                         ttt:::t                              f::::::::::::::::f                  i::::i                    \\n  M::::::::M           M::::::::M                                         t:::::t                             f::::::::::::::::::f                  iiii                     \\n  M:::::::::M         M:::::::::M                                         t:::::t                             f::::::fffffff:::::f                                            \\n  M::::::::::M       M::::::::::Muuuuuu    uuuuuu      ssssssssss   ttttttt:::::ttttttt      aaaaaaaaaaaaa    f:::::f       ffffffaaaaaaaaaaaaa   iiiiiiirrrrr   rrrrrrrrr   \\n  M:::::::::::M     M:::::::::::Mu::::u    u::::u    ss::::::::::s  t:::::::::::::::::t      a::::::::::::a   f:::::f             a::::::::::::a  i:::::ir::::rrr:::::::::r  \\n  M:::::::M::::M   M::::M:::::::Mu::::u    u::::u  ss:::::::::::::s t:::::::::::::::::t      aaaaaaaaa:::::a f:::::::ffffff       aaaaaaaaa:::::a  i::::ir:::::::::::::::::r \\n  M::::::M M::::M M::::M M::::::Mu::::u    u::::u  s::::::ssss:::::stttttt:::::::tttttt               a::::a f::::::::::::f                a::::a  i::::irr::::::rrrrr::::::r\\n  M::::::M  M::::M::::M  M::::::Mu::::u    u::::u   s:::::s  ssssss       t:::::t              aaaaaaa:::::a f::::::::::::f         aaaaaaa:::::a  i::::i r:::::r     r:::::r\\n  M::::::M   M:::::::M   M::::::Mu::::u    u::::u     s::::::s            t:::::t            aa::::::::::::a f:::::::ffffff       aa::::::::::::a  i::::i r:::::r     rrrrrrr\\n  M::::::M    M:::::M    M::::::Mu::::u    u::::u        s::::::s         t:::::t           a::::aaaa::::::a  f:::::f            a::::aaaa::::::a  i::::i r:::::r            \\n  M::::::M     MMMMM     M::::::Mu:::::uuuu:::::u  ssssss   s:::::s       t:::::t    tttttta::::a    a:::::a  f:::::f           a::::a    a:::::a  i::::i r:::::r            \\n  M::::::M               M::::::Mu:::::::::::::::uus:::::ssss::::::s      t::::::tttt:::::ta::::a    a:::::a f:::::::f          a::::a    a:::::a i::::::ir:::::r            \\n  M::::::M               M::::::M u:::::::::::::::us::::::::::::::s       tt::::::::::::::ta:::::aaaa::::::a f:::::::f          a:::::aaaa::::::a i::::::ir:::::r            \\n  M::::::M               M::::::M  uu::::::::uu:::u s:::::::::::ss          tt:::::::::::tt a::::::::::aa:::af:::::::f           a::::::::::aa:::ai::::::ir:::::r            \\n  MMMMMMMM               MMMMMMMM    uuuuuuuu  uuuu  sssssssssss              ttttttttttt    aaaaaaaaaa  aaaafffffffff            aaaaaaaaaa  aaaaiiiiiiiirrrrrrr            \\n                                                                                                                                                                              \\n                                                                                                                                                                              \\n');\""
+    "prepublishOnly": "node test-script.js",
+    "test-ascii": "node test-script.js",
+    "postinstall": "node test-script.js"
   },
   "keywords": [
     "carv-id",
@@ -24,5 +27,8 @@
     "nft"
   ],
   "author": "MustaFair Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "mustafair-carvid": "^1.0.1"
+  }
 }
