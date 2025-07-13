@@ -639,16 +639,6 @@ export default function MustaFairBlackLanding() {
 
         </div>
 
-        {/* Contract Status Section */}
-          <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="mt-16"
-        >
-          <ContractStatusChecker />
-        </motion.div>
-
         {/* Team Passport Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -689,19 +679,19 @@ export default function MustaFairBlackLanding() {
               {
                 title: 'GitHub',
                 description: 'Source code and repositories',
-                link: 'https://github.com/mustafair',
+                link: 'https://github.com/chrsnikhil/MustaFair',
                 icon: Github
               },
               {
                 title: 'Documentation',
                 description: 'API docs and guides and sdk',
-                link: 'https://docs.mustafair.com',
+                link: '/docs',
                 icon: BookOpen
               },
               {
                 title: 'Tools',
                 description: 'Development utilities',
-                link: 'https://tools.mustafair.com',
+                link: 'https://www.npmjs.com/package/@mustafair/reputation-sdk',
                 icon: Settings2
               }
             ].map((item, index) => (
