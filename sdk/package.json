@@ -1,6 +1,6 @@
 {
   "name": "@mustafair/reputation-sdk",
-  "version": "1.3.0",
+  "version": "1.3.2",
   "description": "Official SDK for integrating CARV ID authentication and MustaFair reputation systems into decentralized applications",
   "type": "module",
   "main": "dist/index.js",
@@ -9,7 +9,8 @@
   "files": [
     "dist/**/*",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "postinstall.js"
   ],
   "scripts": {
     "build": "rollup -c",
@@ -18,7 +19,8 @@
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "postinstall": "node postinstall.js"
   },
   "keywords": [
     "carv-id",
@@ -76,5 +78,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1"
   }
 }
